@@ -1,23 +1,21 @@
 package io.tangent.chemesis;
 
+import java.util.List;
 import java.util.Locale;
 
 import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
+
+import io.tangent.chemesis.models.Chemical;
+import io.tangent.chemesis.models.Reaction;
+import io.tangent.chemesis.models.ReactionChemical;
 
 
 public class MainActivity extends ActionBarActivity implements OnTabInteractionListener {
@@ -37,11 +35,33 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
      */
     ViewPager mViewPager;
 
+    /*
+     * The reaction
+     */
+
+    private Reaction reaction;
+
+    public Reaction getReaction() {
+        return reaction;
+    }
+
+    public List<ReactionChemical> getChemlist(String listName){
+        if( listName.equals("reactants") ){
+            return this.reaction.getReactants();
+        } else if( listName.equals("products") ){
+            return this.reaction.getProducts();
+        } else {
+            throw new IllegalArgumentException("Inccorrect list name");
+        }
+    }
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -51,6 +71,12 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
+        // create fake reaction
+        this.reaction = new Reaction();
+        this.reaction.addReactant(Chemical.CH4_g);
+        this.reaction.addReactant(Chemical.O2_ref);
+        this.reaction.addProduct(Chemical.CO2_g);
+        this.reaction.addProduct(Chemical.H2O_g);
     }
 
 
@@ -82,15 +108,18 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
     }
 
 
+
+
+
+
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-        private Fragment reactantsFragment = ReactantsFragment.newInstance("1","2");
-        private Fragment productsFragment = ProductsFragment.newInstance("1","2");
-        private Fragment reactionFragment = ReactionFragment.newInstance("1","2");
+        private Fragment reactantsFragment = ChemlistFragment.newInstance("reactants");
+        private Fragment productsFragment = ChemlistFragment.newInstance("products");
 
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
@@ -103,8 +132,6 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
                     return reactantsFragment;
                 case 1:
                     return productsFragment;
-                case 2:
-                    return reactionFragment;
                 default:
                     throw new IllegalArgumentException("Invalid Index for Fragment");
             }
@@ -113,7 +140,7 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
         @Override
         public int getCount() {
             // Show 3 total pages.
-            return 3;
+            return 2;
         }
 
         @Override
@@ -124,44 +151,10 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
                     return getString(R.string.title_section1).toUpperCase(l);
                 case 1:
                     return getString(R.string.title_section2).toUpperCase(l);
-                case 2:
-                    return getString(R.string.title_section3).toUpperCase(l);
             }
             return null;
         }
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        public PlaceholderFragment() {
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
-        }
-    }
 
 }
