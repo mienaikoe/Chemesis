@@ -1,0 +1,32 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/io.tangent.chemesis.views"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp"
+    >
+
+
+    <FrameLayout
+        android:id="@+id/leftbox"
+        android:layout_width="50dp"
+        android:layout_height="50dp"></FrameLayout>
+
+    <TextView
+        android:id="@+id/chemical_name"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:textSize="24dp"
+        android:textColor="@color/nist_purple"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/leftbox"/>
+
+    <TextView
+        android:id="@+id/chemical_formula"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18dp"
+        android:textColor="@color/dark_gray"
+        android:layout_alignLeft="@+id/chemical_name"
+        android:layout_below="@+id/chemical_name"/>
+
+</RelativeLayout>

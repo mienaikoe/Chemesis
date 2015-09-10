@@ -1664,6 +1664,22 @@ public enum Chemical {
 		return name;
 	}
 
+	public String getCas() {
+		return cas;
+	}
+
+	public HashMap<Element, Integer> getComposition() {
+		return composition;
+	}
+
+	public String getFormula() {
+		return formula;
+	}
+
+	public String getState() {
+		return state;
+	}
+
 	public List<Chemical> find(String query){
 		List<Chemical> results = new ArrayList<Chemical>();
 		for( Chemical chemical : this.values() ){

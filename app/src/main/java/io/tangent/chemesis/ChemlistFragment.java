@@ -10,10 +10,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 
 import java.util.List;
 
 import io.tangent.chemesis.models.ReactionChemical;
+import io.tangent.chemesis.views.ChemicalArrayAdapter;
 import io.tangent.chemesis.views.TextViewPlus;
 
 
@@ -24,11 +26,8 @@ import io.tangent.chemesis.views.TextViewPlus;
  */
 public class ChemlistFragment extends Fragment {
 
-    private static String PARAM1 = "chemlistName";
-    private String chemlistName;
-
-    private List<ReactionChemical> chemicals;
-
+    private String name;
+    private ChemicalArrayAdapter mAdapter;
     private OnTabInteractionListener mListener;
 
     /**
@@ -38,9 +37,10 @@ public class ChemlistFragment extends Fragment {
      * @return A new instance of fragment BuildFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static ChemlistFragment newInstance(String chemlistName) {
+    public static ChemlistFragment newInstance(ChemicalArrayAdapter adapter, String name) {
         ChemlistFragment fragment = new ChemlistFragment();
-        fragment.setChemlistName(chemlistName);
+        fragment.setName(name);
+        fragment.setAdapter(adapter);
         return fragment;
     }
 
@@ -48,8 +48,12 @@ public class ChemlistFragment extends Fragment {
         // Required empty public constructor
     }
 
-    private void setChemlistName(String chemlistName){
-        this.chemlistName = chemlistName;
+    private void setName(String name){
+        this.name = name;
+    }
+
+    private void setAdapter(ChemicalArrayAdapter adapter){
+        this.mAdapter = adapter;
     }
 
     @Override
@@ -57,18 +61,8 @@ public class ChemlistFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View ret = inflater.inflate(R.layout.fragment_chemlist, container, false);
-
-        LinearLayout list = (LinearLayout)ret.findViewById(R.id.chemicals);
-        this.chemicals = ((MainActivity)getActivity()).getChemlist(this.chemlistName);
-        for( ReactionChemical c : this.chemicals ){
-            TextViewPlus chemicalView = new TextViewPlus(this.getActivity().getApplicationContext());
-            chemicalView.setText(c.getChemical().getName());
-            chemicalView.setPadding(20, 20, 20, 20);
-            chemicalView.setTextColor(Color.WHITE);
-            chemicalView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-            list.addView(chemicalView);
-        }
-
+        ListView list = (ListView)ret.findViewById(R.id.chemlist);
+        list.setAdapter(this.mAdapter);
         return ret;
     }
 

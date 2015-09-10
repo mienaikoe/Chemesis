@@ -16,6 +16,7 @@ import android.view.MenuItem;
 import io.tangent.chemesis.models.Chemical;
 import io.tangent.chemesis.models.Reaction;
 import io.tangent.chemesis.models.ReactionChemical;
+import io.tangent.chemesis.views.ChemicalArrayAdapter;
 
 
 public class MainActivity extends ActionBarActivity implements OnTabInteractionListener {
@@ -40,20 +41,14 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
      */
 
     private Reaction reaction;
+    private ChemicalArrayAdapter reactantsAdapter;
+    private ChemicalArrayAdapter productsAdapter;
 
     public Reaction getReaction() {
         return reaction;
     }
 
-    public List<ReactionChemical> getChemlist(String listName){
-        if( listName.equals("reactants") ){
-            return this.reaction.getReactants();
-        } else if( listName.equals("products") ){
-            return this.reaction.getProducts();
-        } else {
-            throw new IllegalArgumentException("Inccorrect list name");
-        }
-    }
+
 
 
 
@@ -63,20 +58,33 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Create the adapter that will return a fragment for each of the three
-        // primary sections of the activity.
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-
-        // Set up the ViewPager with the sections adapter.
-        mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setAdapter(mSectionsPagerAdapter);
-
         // create fake reaction
         this.reaction = new Reaction();
         this.reaction.addReactant(Chemical.CH4_g);
         this.reaction.addReactant(Chemical.O2_ref);
         this.reaction.addProduct(Chemical.CO2_g);
         this.reaction.addProduct(Chemical.H2O_g);
+
+        this.reactantsAdapter = new ChemicalArrayAdapter(
+                this,
+                R.layout.chemical_list_item_view,
+                this.reaction.getReactants());
+
+        this.productsAdapter = new ChemicalArrayAdapter(
+                this,
+                R.layout.chemical_list_item_view,
+                this.reaction.getProducts());
+
+        // Create the adapter that will return a fragment for each of the three
+        // primary sections of the activity.
+        mSectionsPagerAdapter = new SectionsPagerAdapter(
+                getSupportFragmentManager(),
+                this.reactantsAdapter, this.productsAdapter
+        );
+
+        // Set up the ViewPager with the sections adapter.
+        mViewPager = (ViewPager) findViewById(R.id.pager);
+        mViewPager.setAdapter(mSectionsPagerAdapter);
     }
 
 
@@ -118,11 +126,17 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-        private Fragment reactantsFragment = ChemlistFragment.newInstance("reactants");
-        private Fragment productsFragment = ChemlistFragment.newInstance("products");
+        private ChemlistFragment reactantsFragment;
+        private ChemlistFragment productsFragment;
 
-        public SectionsPagerAdapter(FragmentManager fm) {
+        public SectionsPagerAdapter(FragmentManager fm,
+                                    ChemicalArrayAdapter reactantsAdapter,
+                                    ChemicalArrayAdapter productsAdapter) {
             super(fm);
+            this.reactantsFragment = ChemlistFragment.newInstance(
+                    reactantsAdapter, "Reactants");
+            this.productsFragment = ChemlistFragment.newInstance(
+                    productsAdapter, "Products");
         }
 
         @Override

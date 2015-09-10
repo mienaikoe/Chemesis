@@ -6,7 +6,7 @@ package io.tangent.chemesis.models;
 public enum Element {
 
 	H("H",1,1.00784),
-	D("D",1,2.02986218945), // Deuterium
+	D("D",1,2.01410177812), // Deuterium
 	He("He",2,4.002602),
 	Li("Li",3,6.938),
 	Be("Be",4,9.0121831),

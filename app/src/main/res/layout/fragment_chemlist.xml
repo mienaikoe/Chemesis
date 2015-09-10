@@ -1,31 +1,25 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent" tools:context="io.tangent.chemesis.ChemlistFragment"
-    android:background="#5500FF">
+    android:background="#FFFFFF">
 
     <!-- TODO: Update blank fragment layout -->
 
-    <ScrollView
+    <ListView
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/scrollView" >
-
-        <LinearLayout
-            android:id="@+id/chemicals"
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-        </LinearLayout>
-    </ScrollView>
+        android:id="@+id/chemlist"
+        android:background="#ffffff">
+    </ListView>
 
     <ImageButton
         android:id="@+id/add_chemical"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom|right"
         android:layout_marginRight="20dp"
         android:layout_marginBottom="20dp"
         android:background="#00ffffff"
-        android:src="@android:drawable/ic_dialog_info" />
+        android:src="@drawable/ic_plus_button" />
 
 </FrameLayout>
