@@ -1,17 +1,38 @@
 package io.tangent.chemesis;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.AttributeSet;
+import android.view.KeyEvent;
 import android.view.Menu;
-import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.EditText;
+import android.widget.ListView;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import io.tangent.chemesis.models.Chemical;
+import io.tangent.chemesis.views.ChemicalArrayAdapter;
+import io.tangent.chemesis.views.ReactionChemicalArrayAdapter;
 
 
-public class SearchActivity extends ActionBarActivity {
+public class SearchActivity extends ActionBarActivity implements AdapterView.OnItemClickListener {
+
+    private ChemicalArrayAdapter adapter;
+    private Chemical choice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+        this.adapter = new ChemicalArrayAdapter(this, new ArrayList<Chemical>());
     }
 
     @Override
@@ -22,17 +43,46 @@ public class SearchActivity extends ActionBarActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    public void onPostCreate(Bundle savedState) {
+        super.onPostCreate(savedState);
+        EditText searchInput = (EditText)findViewById(R.id.searchInput);
+        searchInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // nothing
+            }
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // nothing
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String query = s.toString();
+                if (query.length() > 2) {
+                    List<Chemical> chemicals = Chemical.find(query);
+                    adapter.setObjects(chemicals);
+                }
+            }
+        });
+        ListView searchList = (ListView)findViewById(R.id.searchResults);
+        searchList.setAdapter(this.adapter);
+        searchList.setOnItemClickListener(this);
+    }
+
+    public void finish(){
+        Intent responseData = new Intent();
+        if( this.choice != null ) {
+            responseData.putExtra("chemical", this.choice.name());
         }
+        this.setResult(Activity.RESULT_OK, responseData);
+        super.finish();
+    }
 
-        return super.onOptionsItemSelected(item);
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        this.choice = this.adapter.getObjects().get(position);
+        this.finish();
     }
 }

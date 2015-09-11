@@ -1680,9 +1680,10 @@ public enum Chemical {
 		return state;
 	}
 
-	public List<Chemical> find(String query){
+	public static List<Chemical> find(String query){
+		query = query.toUpperCase();
 		List<Chemical> results = new ArrayList<Chemical>();
-		for( Chemical chemical : this.values() ){
+		for( Chemical chemical : Chemical.values() ){
 			if( chemical.queryMatch.contains(query) ){
 				results.add(chemical);
 			}

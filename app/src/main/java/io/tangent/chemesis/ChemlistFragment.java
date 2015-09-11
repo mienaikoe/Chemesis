@@ -1,22 +1,16 @@
 package io.tangent.chemesis;
 
 import android.app.Activity;
-import android.graphics.Color;
-import android.net.Uri;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
+import android.widget.ImageButton;
 import android.widget.ListView;
 
-import java.util.List;
-
-import io.tangent.chemesis.models.ReactionChemical;
-import io.tangent.chemesis.views.ChemicalArrayAdapter;
-import io.tangent.chemesis.views.TextViewPlus;
+import io.tangent.chemesis.views.ReactionChemicalArrayAdapter;
 
 
 /**
@@ -24,11 +18,12 @@ import io.tangent.chemesis.views.TextViewPlus;
  * Use the {@link ChemlistFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ChemlistFragment extends Fragment {
+public class ChemlistFragment extends Fragment implements View.OnClickListener {
 
-    private String name;
-    private ChemicalArrayAdapter mAdapter;
+    private int addRequestId;
+    private ReactionChemicalArrayAdapter mAdapter;
     private OnTabInteractionListener mListener;
+    private Activity parentActivity;
 
     /**
      * Use this factory method to create a new instance of
@@ -37,9 +32,9 @@ public class ChemlistFragment extends Fragment {
      * @return A new instance of fragment BuildFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static ChemlistFragment newInstance(ChemicalArrayAdapter adapter, String name) {
+    public static ChemlistFragment newInstance(ReactionChemicalArrayAdapter adapter, int addRequestId) {
         ChemlistFragment fragment = new ChemlistFragment();
-        fragment.setName(name);
+        fragment.setAddRequestId(addRequestId);
         fragment.setAdapter(adapter);
         return fragment;
     }
@@ -48,11 +43,11 @@ public class ChemlistFragment extends Fragment {
         // Required empty public constructor
     }
 
-    private void setName(String name){
-        this.name = name;
+    private void setAddRequestId(int requestId){
+        this.addRequestId = requestId;
     }
 
-    private void setAdapter(ChemicalArrayAdapter adapter){
+    private void setAdapter(ReactionChemicalArrayAdapter adapter){
         this.mAdapter = adapter;
     }
 
@@ -63,19 +58,23 @@ public class ChemlistFragment extends Fragment {
         View ret = inflater.inflate(R.layout.fragment_chemlist, container, false);
         ListView list = (ListView)ret.findViewById(R.id.chemlist);
         list.setAdapter(this.mAdapter);
+
+        ImageButton addButton = (ImageButton)ret.findViewById(R.id.add_chemical);
+        addButton.setOnClickListener(this);
+
         return ret;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
+    @Override
+    public void onClick(View v) {
+        Intent intent = new Intent(parentActivity, SearchActivity.class);
+        getActivity().startActivityForResult(intent, addRequestId);
     }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+        this.parentActivity = activity;
         try {
             mListener = (OnTabInteractionListener) activity;
         } catch (ClassCastException e) {

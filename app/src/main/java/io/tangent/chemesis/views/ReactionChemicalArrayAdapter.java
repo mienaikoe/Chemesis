@@ -1,6 +1,7 @@
 package io.tangent.chemesis.views;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,51 +16,45 @@ import io.tangent.chemesis.models.Reaction;
 import io.tangent.chemesis.models.ReactionChemical;
 
 /**
- * Created by Jesse on 9/11/2015.
+ * TODO: document your custom view class.
  */
-public class ChemicalArrayAdapter extends ArrayAdapter<Chemical> {
+public class ReactionChemicalArrayAdapter extends ArrayAdapter<ReactionChemical> {
 
-    private List<Chemical> mObjects;
+    private List<ReactionChemical> mObjects;
+    private Reaction reaction;
     private LayoutInflater mInflater;
 
 
-    public ChemicalArrayAdapter(Context context, List<Chemical> objects) {
+    public ReactionChemicalArrayAdapter(Context context, List<ReactionChemical> objects, Reaction reaction) {
         super(context, 0, objects);
         this.mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         this.mObjects = objects;
+        this.reaction = reaction;
     }
 
     public int getCount(){
         return this.mObjects.size();
     }
 
-    public List<Chemical> getObjects() {
-        return mObjects;
-    }
-
-    public void setObjects(List<Chemical> objects) {
-        this.mObjects = objects;
-        this.notifyDataSetChanged();
-    }
-
     public View getView( int position, View ret, ViewGroup parent  ) {
-        Chemical chem = this.mObjects.get(position);
+        ReactionChemical chem = this.mObjects.get(position);
 
         if (ret == null) {
             ret = mInflater.inflate(R.layout.chemical_list_item_view, null);
         }
 
         TextView chemicalName = (TextView) ret.findViewById(R.id.chemical_name);
-        chemicalName.setText(chem.getName());
+        chemicalName.setText(chem.getChemical().getName());
 
         TextView chemicalFormula = (TextView) ret.findViewById(R.id.chemical_formula);
-        chemicalFormula.setText(chem.getFormula());
+        chemicalFormula.setText(chem.getChemical().getFormula());
 
         // conditionals
         return ret;
     }
 
     public void insert(Chemical chemical, int index){
-        this.mObjects.add(index, chemical);
+        ReactionChemical rc = new ReactionChemical(chemical, this.reaction);
+        this.mObjects.add(index, rc);
     }
 }

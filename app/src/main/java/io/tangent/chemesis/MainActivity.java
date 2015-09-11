@@ -1,8 +1,8 @@
 package io.tangent.chemesis;
 
-import java.util.List;
 import java.util.Locale;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
@@ -10,13 +10,13 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import io.tangent.chemesis.models.Chemical;
 import io.tangent.chemesis.models.Reaction;
-import io.tangent.chemesis.models.ReactionChemical;
-import io.tangent.chemesis.views.ChemicalArrayAdapter;
+import io.tangent.chemesis.views.ReactionChemicalArrayAdapter;
 
 
 public class MainActivity extends ActionBarActivity implements OnTabInteractionListener {
@@ -41,8 +41,12 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
      */
 
     private Reaction reaction;
-    private ChemicalArrayAdapter reactantsAdapter;
-    private ChemicalArrayAdapter productsAdapter;
+    private ReactionChemicalArrayAdapter reactantsAdapter;
+    private ReactionChemicalArrayAdapter productsAdapter;
+
+    private static final int REACTANTS_ADD = 0;
+    private static final int PRODUCTS_ADD = 1;
+
 
     public Reaction getReaction() {
         return reaction;
@@ -65,18 +69,13 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
         this.reaction.addProduct(Chemical.CO2_g);
         this.reaction.addProduct(Chemical.H2O_g);
 
-        this.reactantsAdapter = new ChemicalArrayAdapter(
-                this,
-                R.layout.chemical_list_item_view,
-                this.reaction.getReactants());
+        this.reactantsAdapter = new ReactionChemicalArrayAdapter(
+                this, this.reaction.getReactants(), this.reaction);
 
-        this.productsAdapter = new ChemicalArrayAdapter(
-                this,
-                R.layout.chemical_list_item_view,
-                this.reaction.getProducts());
+        this.productsAdapter = new ReactionChemicalArrayAdapter(
+                this, this.reaction.getProducts(), this.reaction);
 
-        // Create the adapter that will return a fragment for each of the three
-        // primary sections of the activity.
+        // paging adapter for fragments
         mSectionsPagerAdapter = new SectionsPagerAdapter(
                 getSupportFragmentManager(),
                 this.reactantsAdapter, this.productsAdapter
@@ -115,10 +114,36 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
         // TODO: IDK
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.i("TAG","In Results Act");
+        if( data == null ){
+            Log.w("TAG", "No Result");
+            return;
+        }
+        Bundle b = data.getExtras();
+        String chemName = b.getString("chemical");
+        if( chemName == null ){
+            Log.w("TAG", "No Chemname");
+            return;
+        }
+        Chemical chem = Chemical.valueOf(chemName);
+        if( chem == null ){
+            Log.w("TAG", "Invalid Chemical: "+chemName);
+            return;
+        }
+        if( requestCode == REACTANTS_ADD ){
+            this.reaction.addReactant(chem);
+            Log.i("TAG",String.valueOf(this.reaction.getReactants().size()));
+            this.reactantsAdapter.notifyDataSetChanged();
 
-
-
-
+        } else if( requestCode == PRODUCTS_ADD ){
+            this.reaction.addProduct(chem);
+            this.productsAdapter.notifyDataSetChanged();
+        } else {
+            Log.e("TAG", "Invalid Request Code: "+String.valueOf(requestCode));
+        }
+    }
 
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
@@ -130,13 +155,13 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
         private ChemlistFragment productsFragment;
 
         public SectionsPagerAdapter(FragmentManager fm,
-                                    ChemicalArrayAdapter reactantsAdapter,
-                                    ChemicalArrayAdapter productsAdapter) {
+                                    ReactionChemicalArrayAdapter reactantsAdapter,
+                                    ReactionChemicalArrayAdapter productsAdapter) {
             super(fm);
             this.reactantsFragment = ChemlistFragment.newInstance(
-                    reactantsAdapter, "Reactants");
+                    reactantsAdapter, REACTANTS_ADD);
             this.productsFragment = ChemlistFragment.newInstance(
-                    productsAdapter, "Products");
+                    productsAdapter, PRODUCTS_ADD);
         }
 
         @Override
