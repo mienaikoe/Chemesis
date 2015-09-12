@@ -1635,23 +1635,8 @@ public enum Chemical {
 	private HashMap<Element, Integer> composition;
 
     Chemical(String formula, String file, String state, String name, String cas){
-        this.formula = formula;
-
-		Pattern FORMULA_SPLIT_REGEX = Pattern.compile("([A-Z][a-z]*)(\\d*)");
-		HashMap<Element, Integer> composition = new HashMap<Element, Integer>();
-		Matcher m = FORMULA_SPLIT_REGEX.matcher(formula);
-		while(m.find()){
-			Element element = Element.valueOf(m.group(1));
-			if( element != null ){
-				String countStr = m.group(2);
-				Integer count = 1;
-				if( countStr.length() > 0 ) {
-					count = Integer.valueOf(countStr);
-				}
-				composition.put(element, count);
-			}
-		}
-		this.composition = composition;
+		this.composition = Chemical.parseComposition(formula);
+		this.formula = Chemical.formatFormula(formula);
 
         this.file = file;
         this.state = state;
@@ -1689,5 +1674,35 @@ public enum Chemical {
 			}
 		}
 		return results;
+	}
+
+	private static HashMap<Element, Integer> parseComposition(String formula){
+		Pattern FORMULA_SPLIT_REGEX = Pattern.compile("([A-Z][a-z]*)(\\d*)");
+		HashMap<Element, Integer> composition = new HashMap<Element, Integer>();
+		Matcher m = FORMULA_SPLIT_REGEX.matcher(formula);
+		while(m.find()){
+			Element element = Element.valueOf(m.group(1));
+			if( element != null ){
+				String countStr = m.group(2);
+				Integer count = 1;
+				if( countStr.length() > 0 ) {
+					count = Integer.valueOf(countStr);
+				}
+				composition.put(element, count);
+			}
+		}
+		return composition;
+	}
+
+	private static String formatFormula(String formula){
+		StringBuilder newFormula = new StringBuilder();
+		for( char ch : formula.toCharArray() ){
+			if( ch >= '0' && ch <= '9' ){
+				newFormula.append((char) (ch + 8272));
+			} else {
+				newFormula.append(ch);
+			}
+		}
+		return newFormula.toString();
 	}
 }

@@ -11,8 +11,6 @@ import java.util.List;
 
 import io.tangent.chemesis.R;
 import io.tangent.chemesis.models.Chemical;
-import io.tangent.chemesis.models.Reaction;
-import io.tangent.chemesis.models.ReactionChemical;
 
 /**
  * Created by Jesse on 9/11/2015.

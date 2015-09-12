@@ -7,12 +7,18 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.TextView;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.tangent.chemesis.R;
 
 
 public class TextViewPlus extends TextView {
 
     private static String TAG = "TextViewPlus";
+    private static final Map<String, Typeface> typefaceCache = new HashMap<String, Typeface>();
+
 
     public TextViewPlus(Context context) {
         super(context);
@@ -32,21 +38,31 @@ public class TextViewPlus extends TextView {
     private void setCustomFont(Context ctx, AttributeSet attrs) {
         TypedArray a = ctx.obtainStyledAttributes(attrs, R.styleable.TextViewPlus);
         String typeface = a.getString(R.styleable.TextViewPlus_typeface);
-        setCustomFont(ctx, typeface);
+        //String typeface = "fonts/Kiro-Regular-webfont.ttf";
+        try {
+            setCustomFont(ctx, typeface);
+        } catch( Exception ex ){
+            Log.e(TAG, ex.getMessage());
+            Log.e(TAG, ex.getStackTrace().toString());
+        }
         a.recycle();
     }
 
     public boolean setCustomFont(Context ctx, String asset) {
-        Typeface tf = null;
-        try {
-            tf = Typeface.createFromAsset(ctx.getAssets(), asset);
-        } catch (Exception e) {
-            Log.e(TAG, "Could not get typeface: "+e.getMessage());
-            return false;
+        Typeface tf = TextViewPlus.typefaceCache.get(asset);
+        if( tf == null ) {
+            try {
+                tf = Typeface.createFromAsset(ctx.getAssets(), asset);
+            } catch (Exception e) {
+                Log.e(TAG, "Could not get typeface: " + e.getMessage());
+                return false;
+            }
+            TextViewPlus.typefaceCache.put(asset, tf);
         }
-
         setTypeface(tf);
         return true;
     }
+
+
 
 }

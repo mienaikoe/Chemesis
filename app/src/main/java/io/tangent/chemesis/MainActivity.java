@@ -116,12 +116,10 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.i("TAG","In Results Act");
-        if( data == null ){
-            Log.w("TAG", "No Result");
-            return;
-        }
         Bundle b = data.getExtras();
+        if( b == null ){
+            return; // used back button
+        }
         String chemName = b.getString("chemical");
         if( chemName == null ){
             Log.w("TAG", "No Chemname");

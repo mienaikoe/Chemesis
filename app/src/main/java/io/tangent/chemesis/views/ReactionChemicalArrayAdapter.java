@@ -1,11 +1,11 @@
 package io.tangent.chemesis.views;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import java.util.List;
@@ -40,7 +40,7 @@ public class ReactionChemicalArrayAdapter extends ArrayAdapter<ReactionChemical>
         ReactionChemical chem = this.mObjects.get(position);
 
         if (ret == null) {
-            ret = mInflater.inflate(R.layout.chemical_list_item_view, null);
+            ret = mInflater.inflate(R.layout.reaction_chemical_list_item_view, null);
         }
 
         TextView chemicalName = (TextView) ret.findViewById(R.id.chemical_name);
@@ -49,12 +49,32 @@ public class ReactionChemicalArrayAdapter extends ArrayAdapter<ReactionChemical>
         TextView chemicalFormula = (TextView) ret.findViewById(R.id.chemical_formula);
         chemicalFormula.setText(chem.getChemical().getFormula());
 
+        ImageButton remover = (ImageButton) ret.findViewById(R.id.remove_chemical);
+        remover.setOnClickListener(new ReactionChemicalRemoverClickListener(chem));
+
         // conditionals
         return ret;
     }
+    
 
-    public void insert(Chemical chemical, int index){
-        ReactionChemical rc = new ReactionChemical(chemical, this.reaction);
-        this.mObjects.add(index, rc);
+
+
+
+    class ReactionChemicalRemoverClickListener implements View.OnClickListener {
+
+        private ReactionChemical reactionChemical;
+
+        public ReactionChemicalRemoverClickListener(ReactionChemical reactionChemical){
+            this.reactionChemical = reactionChemical;
+        }
+
+        @Override
+        public void onClick(View v) {
+            mObjects.remove(this.reactionChemical);
+            notifyDataSetChanged();
+            this.reactionChemical = null; // for gc
+        }
     }
 }
+
+
