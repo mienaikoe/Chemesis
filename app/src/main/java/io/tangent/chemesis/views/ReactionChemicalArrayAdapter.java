@@ -43,6 +43,11 @@ public class ReactionChemicalArrayAdapter extends ArrayAdapter<ReactionChemical>
             ret = mInflater.inflate(R.layout.reaction_chemical_list_item_view, null);
         }
 
+        if( chem.getParts() != null ){
+            TextView chemicalCount = (TextView) ret.findViewById(R.id.chemical_count);
+            chemicalCount.setText(String.valueOf(chem.getParts()));
+        }
+
         TextView chemicalName = (TextView) ret.findViewById(R.id.chemical_name);
         chemicalName.setText(chem.getChemical().getName());
 
@@ -55,7 +60,7 @@ public class ReactionChemicalArrayAdapter extends ArrayAdapter<ReactionChemical>
         // conditionals
         return ret;
     }
-    
+
 
 
 

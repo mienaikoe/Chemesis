@@ -2,15 +2,10 @@
 <resources>
     <string name="app_name">Chemesis</string>
 
-    <string name="title_section1">Favorites</string>
-    <string name="title_section2">Build</string>
-    <string name="title_section3">React</string>
+    <string name="title_section1">Reactants</string>
+    <string name="title_section2">Products</string>
 
-    <string name="hello_world">Hello world!</string>
+    <string name="action_react">React</string>
 
-    <string name="action_settings">Settings</string>
-
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="title_activity_search">SearchActivity</string>
+    <string name="title_activity_search">Search Chemicals</string>
 </resources>
