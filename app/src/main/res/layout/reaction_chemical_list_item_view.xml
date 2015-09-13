@@ -9,10 +9,14 @@
 
     <io.tangent.chemesis.views.TextViewPlus
         android:id="@+id/chemical_count"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:textSize="22dp"
+        android:textColor="@color/dark_gray"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
+        android:gravity="right"
+        android:paddingRight="5dp"
         chemesis:typeface="fonts/Kiro-Regular-webfont.ttf"
         />
 

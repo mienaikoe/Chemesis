@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.tangent.chemesis.util.Callback;
+
 
 /**
  * Created by Jesse on 9/7/2015.
@@ -27,6 +29,8 @@ public class Reaction {
 
     private final List<ReactionChemical> reactants;
     private final List<ReactionChemical> products;
+    private boolean isBalanced = false;
+    private Callback onInvalidate;
 
     public Reaction(){
         this.reactants = new ArrayList<ReactionChemical>();
@@ -43,26 +47,49 @@ public class Reaction {
 
     public void addReactant(Chemical chemical){
         this.reactants.add(new ReactionChemical(chemical, this));
-    }
-
-    public void removeReactant(Chemical chemical){
-        for( ReactionChemical rc : this.reactants ) {
-            if (rc.getChemical() == chemical) {
-                this.reactants.remove(rc);
-            }
-        }
+        this.invalidateBalance();
     }
 
     public void addProduct(Chemical chemical){
         this.products.add(new ReactionChemical(chemical, this));
+        this.invalidateBalance();
     }
 
-    public void removeProduct(Chemical chemical){
-        for( ReactionChemical rc : this.products ) {
-            if (rc.getChemical() == chemical) {
-                this.products.remove(rc);
+    public void remove(ReactionChemical chemical){
+        List<ReactionChemical> chemlist = null;
+        if( this.reactants.contains(chemical) ){
+            chemlist = this.reactants;
+        } else if( this.products.contains(chemical) ){
+            chemlist = this.products;
+        }
+
+        if( chemlist != null ){
+            chemlist.remove(chemical);
+            this.invalidateBalance();
+        }
+    }
+
+    private void invalidateBalance(){
+        if( this.isBalanced ) {
+            this.isBalanced = false;
+            for (ReactionChemical rc : this.reactants) {
+                rc.setParts(null);
+            }
+            for (ReactionChemical rc : this.products) {
+                rc.setParts(null);
+            }
+            if( this.onInvalidate != null ){
+                this.onInvalidate.perform(null);
             }
         }
+    }
+
+    public void setOnInvalidate( Callback cb ){
+        this.onInvalidate = cb;
+    }
+
+    public boolean isBalanced(){
+        return this.isBalanced;
     }
 
 
@@ -72,21 +99,30 @@ public class Reaction {
 
         // compile a list of all involved elements
         int n = 0;
-        Set<Element> elements = new HashSet<Element>();
+        Set<Element> reactantElements = new HashSet<Element>();
         for( ReactionChemical reactionChemical : this.reactants ){
-            elements.addAll( reactionChemical.getChemical().getComposition().keySet() );
+            reactantElements.addAll( reactionChemical.getChemical().getComposition().keySet() );
             n++;
         }
+        Set<Element> productElements = new HashSet<Element>();
         for( ReactionChemical reactionChemical : this.products ){
-            elements.addAll( reactionChemical.getChemical().getComposition().keySet() );
+            productElements.addAll( reactionChemical.getChemical().getComposition().keySet() );
             n++;
         }
+
+        if( !reactantElements.equals(productElements) ){
+            throw new IllegalStateException("Equation cannot be balanced. Please make sure all elements are on both sides");
+        }
+
+        Set<Element> elements = new HashSet<Element>(reactantElements.size() + productElements.size());
+        elements.addAll(reactantElements);
+        elements.addAll(productElements);
 
         // populate Matrix A, a matrix for the elemental contributions from each chemical
         int m = elements.size();
         int diff = n - m;
-        if( diff < 0 ){ // less chems than species. indeterminate
-            throw new IllegalStateException("Equation is indeterminate - cannot balance");
+        if( diff < 0 ){ // More Elements than Chems. Overdetermined Linear System. Cannot Solve
+            throw new IllegalStateException("Equation cannot be solved");
         }
 
         RealMatrix a = MatrixUtils.createRealMatrix(m + diff, n);
@@ -155,6 +191,7 @@ public class Reaction {
             reactionChemical.setParts(partsInt);
         }
 
+        this.isBalanced = true;
     }
 
 

@@ -20,6 +20,10 @@
             android:name=".SearchActivity"
             android:label="@string/title_activity_search" >
         </activity>
+        <activity
+            android:name=".EnergeticsActivity"
+            android:label="@string/title_activity_energetics" >
+        </activity>
     </application>
 
 </manifest>

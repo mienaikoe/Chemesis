@@ -1627,6 +1627,7 @@ public enum Chemical {
 
 
     private String formula;
+	private String formulaQuery;
     private String file;
     private String state;
     private String name;
@@ -1637,6 +1638,7 @@ public enum Chemical {
     Chemical(String formula, String file, String state, String name, String cas){
 		this.composition = Chemical.parseComposition(formula);
 		this.formula = Chemical.formatFormula(formula);
+		this.formulaQuery = formula.toUpperCase();
 
         this.file = file;
         this.state = state;
@@ -1669,12 +1671,17 @@ public enum Chemical {
 		query = query.toUpperCase();
 		List<Chemical> results = new ArrayList<Chemical>();
 		for( Chemical chemical : Chemical.values() ){
-			if( chemical.queryMatch.contains(query) ){
+			if( chemical.name.toUpperCase().equals(query) ){
+				results.add(0, chemical);
+			} else if( chemical.formulaQuery.matches(query) ) {
+				results.add(0, chemical);
+			} else if( chemical.queryMatch.contains(query) ){
 				results.add(chemical);
 			}
 		}
 		return results;
 	}
+
 
 	private static HashMap<Element, Integer> parseComposition(String formula){
 		Pattern FORMULA_SPLIT_REGEX = Pattern.compile("([A-Z][a-z]*)(\\d*)");

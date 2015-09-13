@@ -26,4 +26,7 @@ public class ReactionChemical {
         return chemical;
     }
 
+    public void remove(){
+        this.reaction.remove(this);
+    }
 }

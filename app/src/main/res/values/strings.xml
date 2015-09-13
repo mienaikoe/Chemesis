@@ -6,6 +6,11 @@
     <string name="title_section2">Products</string>
 
     <string name="action_react">React</string>
+    <string name="action_energetics">Energetics</string>
 
     <string name="title_activity_search">Search Chemicals</string>
+    <string name="title_activity_energetics">Energetics</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
 </resources>

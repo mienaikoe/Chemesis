@@ -3,6 +3,7 @@ package io.tangent.chemesis;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -33,6 +34,7 @@ public class SearchActivity extends ActionBarActivity implements AdapterView.OnI
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
         this.adapter = new ChemicalArrayAdapter(this, new ArrayList<Chemical>());
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.nist_purple)));
     }
 
     @Override

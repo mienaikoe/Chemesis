@@ -1,8 +1,11 @@
 package io.tangent.chemesis;
 
+import java.sql.Time;
+import java.util.Date;
 import java.util.Locale;
 
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
@@ -13,9 +16,11 @@ import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import io.tangent.chemesis.models.Chemical;
 import io.tangent.chemesis.models.Reaction;
+import io.tangent.chemesis.util.Callback;
 import io.tangent.chemesis.views.ReactionChemicalArrayAdapter;
 
 
@@ -44,6 +49,9 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
     private ReactionChemicalArrayAdapter reactantsAdapter;
     private ReactionChemicalArrayAdapter productsAdapter;
 
+    private MenuItem balanceButton;
+    private MenuItem energeticsButton;
+
     private static final int REACTANTS_ADD = 0;
     private static final int PRODUCTS_ADD = 1;
 
@@ -64,6 +72,13 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
 
         // create fake reaction
         this.reaction = new Reaction();
+        this.reaction.setOnInvalidate(new Callback<Object>() {
+            public void perform(Object thing){
+                invalidateOptionsMenu();
+            }
+        });
+
+        // TODO: Debugging Code. Remove and replace with empty state!!
         this.reaction.addReactant(Chemical.CH4_g);
         this.reaction.addReactant(Chemical.O2_ref);
         this.reaction.addProduct(Chemical.CO2_g);
@@ -84,6 +99,8 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
+
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.nist_purple)));
     }
 
 
@@ -91,7 +108,18 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+        this.balanceButton = menu.findItem(R.id.action_balance);
+        this.energeticsButton = menu.findItem(R.id.action_energetics);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu){
+        this.energeticsButton.setEnabled(this.reaction.isBalanced());
+        this.energeticsButton.setVisible(this.reaction.isBalanced());
+        this.balanceButton.setEnabled(!this.reaction.isBalanced());
+        this.balanceButton.setVisible( !this.reaction.isBalanced() );
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -103,10 +131,17 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_balance) {
-            this.reaction.balance();
-            this.reactantsAdapter.notifyDataSetChanged();
-            this.productsAdapter.notifyDataSetChanged();
-            return true;
+            try {
+                this.reaction.balance();
+                this.reactantsAdapter.notifyDataSetChanged();
+                this.productsAdapter.notifyDataSetChanged();
+                this.invalidateOptionsMenu();
+            } catch (IllegalStateException ex){
+                Toast.makeText(this, ex.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        } else if( id == R.id.action_energetics ){
+            Intent intent = new Intent(this, EnergeticsActivity.class);
+            this.startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);
@@ -135,15 +170,13 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
         }
         if( requestCode == REACTANTS_ADD ){
             this.reaction.addReactant(chem);
-            Log.i("TAG",String.valueOf(this.reaction.getReactants().size()));
-            this.reactantsAdapter.notifyDataSetChanged();
-
         } else if( requestCode == PRODUCTS_ADD ){
             this.reaction.addProduct(chem);
-            this.productsAdapter.notifyDataSetChanged();
         } else {
             Log.e("TAG", "Invalid Request Code: "+String.valueOf(requestCode));
         }
+        this.reactantsAdapter.notifyDataSetChanged();
+        this.productsAdapter.notifyDataSetChanged();
     }
 
     /**
@@ -188,9 +221,9 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
             Locale l = Locale.getDefault();
             switch (position) {
                 case 0:
-                    return getString(R.string.title_section1).toUpperCase(l);
+                    return getString(R.string.title_section1);
                 case 1:
-                    return getString(R.string.title_section2).toUpperCase(l);
+                    return getString(R.string.title_section2);
             }
             return null;
         }
