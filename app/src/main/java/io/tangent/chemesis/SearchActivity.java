@@ -62,9 +62,9 @@ public class SearchActivity extends ActionBarActivity implements AdapterView.OnI
             @Override
             public void afterTextChanged(Editable s) {
                 String query = s.toString();
-                if (query.length() > 2) {
+                if (query.length() > 0) {
                     List<Chemical> chemicals = Chemical.find(query);
-                    adapter.setObjects(chemicals);
+                    adapter.setObjects(chemicals.subList(0, Math.min(chemicals.size(), 100)));
                 }
             }
         });

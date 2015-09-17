@@ -2,6 +2,7 @@ package io.tangent.chemesis.models;
 
 import android.util.Log;
 
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -116,7 +117,11 @@ public class ReactionBalancer {
         matrix.) This defines the null space of the original
         chemical-composition matrix!*/
         int nsvIndex = matrixInverse.getColumnDimension()-1;
-        RealVector nullSpaceVector = matrixInverse.getColumnVector(nsvIndex);
+        RealVector nullSpaceVector = new ArrayRealVector( matrixInverse.getRowDimension() );
+        for( int ix = 0; ix < nullity; ix++ ){
+            RealVector rv = matrixInverse.getColumnVector(nsvIndex - ix);
+            nullSpaceVector = nullSpaceVector.add(rv);
+        }
         Log.i("(e)", nullSpaceVector.toString());
 
         /*(f) Take the transpose of the null space vectors. (Each
