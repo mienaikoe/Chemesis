@@ -95,9 +95,9 @@ public class Reaction {
 
 
 
-    public void balance(){
+    public void balance() throws IllegalStateException{
         ReactionBalancer balancer = new ReactionBalancer();
-        balancer.balance(this);
+        balancer.balanceThorne(this);
         this.isBalanced = true;
     }
 
