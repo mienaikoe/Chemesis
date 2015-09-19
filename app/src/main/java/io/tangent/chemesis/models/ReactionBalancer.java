@@ -26,60 +26,6 @@ public class ReactionBalancer {
     public ReactionBalancer(){
     }
 
-    public void balance(Reaction reaction) throws IllegalStateException{
-        RealMatrix matrix = this.matrixA(reaction);
-        matrix = this.reducedRowEchelonForm(matrix);
-
-        // add rows to make square
-        if( matrix.getColumnDimension() > matrix.getRowDimension() ){
-            RealMatrix squareMatrix = MatrixUtils.createRealMatrix(matrix.getColumnDimension(), matrix.getColumnDimension());
-            squareMatrix.setSubMatrix(matrix.getData(), 0, 0);
-            final int diff = matrix.getColumnDimension() - matrix.getRowDimension();
-            for( int ix=1; ix <= diff; ix++ ){
-                squareMatrix.setEntry(matrix.getRowDimension()-1+ix, matrix.getRowDimension()-1+ix, 1);
-            }
-            matrix = squareMatrix;
-        }
-
-
-        Log.i("sq rref(A)", matrixToString(matrix));
-
-        // invert it
-        try {
-            matrix = new LUDecomposition(matrix).getSolver().getInverse();
-        } catch (SingularMatrixException ex){
-            throw new IllegalStateException("This equation cannot be balanced");
-        }
-
-        Log.i("sq inv rref(A)", matrixToString(matrix));
-
-        // scale it
-        double smallestVal = 1;
-        for( double[] fj : matrix.getData() ){
-            for( double fi : fj ){
-                if( fi < smallestVal ){
-                    smallestVal = fi;
-                }
-            }
-        }
-        matrix = matrix.scalarMultiply(smallestVal);
-
-        Log.i("scaled sq inv rref(A)", matrixToString(matrix));
-
-        int ix=0;
-        for( ReactionChemical rc : reaction.getReactants() ){
-            Log.i("TAG",rc.getChemical().getName());
-            Log.i("TAG",String.valueOf(ix));
-            rc.setParts((int)Math.round(-1 * matrix.getEntry(ix, matrix.getColumnDimension() - 1)));
-            ix++;
-        }
-        for( ReactionChemical rc : reaction.getProducts() ){
-            rc.setParts((int)Math.round(matrix.getEntry(ix, matrix.getColumnDimension()-1)));
-            ix++;
-        }
-    }
-
-
 
     // http://arxiv.org/ftp/arxiv/papers/1110/1110.4321.pdf
     public void balanceThorne(Reaction reaction) throws IllegalStateException{
@@ -88,21 +34,61 @@ public class ReactionBalancer {
         RealMatrix matrix = this.matrixA(reaction);
         Log.i("(a)", matrixToString(matrix));
 
-        /*(b) Determine the nullity, or dimensionality, of the matrix
-        null space of the chemical- composition matrix.*/
-        int rank = new SingularValueDecomposition(matrix).getRank();
-        int nullity = matrix.getColumnDimension() - rank;
-        Log.i("(b)", "Nullity: " + String.valueOf(nullity));
+        // AUGMENTATION
+        RealMatrix augmentedMatrix;
+        RealVector nullSpaceVector;
+        int nullity;
+        if( matrix.getRowDimension() == matrix.getColumnDimension() ){
+             /*
+            Note: This augmentation step is inapplicable if the chemicalcomposition
+            matrix is square to begin with, as it would be, for
+            instance, for ion exchange reactions. In that event, it is
+            necessary to reduce the matrix to a row-echelon form; for
+            details on this procedure, please see the Appendix. The rowechelon
+            form of the chemical-composition matrix will have
+            one or more bottom rows containing only zeroes; to augment
+            this form correctly, the zero rows must be replaced by a
+            partitioned matrix of the proper dimension.
+             */
 
-        /*(c) Augment the matrix with a number of rows equal to the
-        nullity number.*/
-        RealMatrix augmentedMatrix = MatrixUtils.createRealMatrix(matrix.getRowDimension() + nullity, matrix.getColumnDimension());
-        augmentedMatrix.setSubMatrix(matrix.getData(), 0, 0);
-        int maxRows = matrix.getRowDimension() + nullity;
-        for( int ix = matrix.getRowDimension(); ix < maxRows; ix++ ){
-            augmentedMatrix.setEntry(ix, ix, 1);
+            augmentedMatrix = this.rowEchelonForm(matrix);
+            nullity = 0;
+            for( int ix = 0; ix < matrix.getRowDimension(); ix++ ){
+                RealVector row = augmentedMatrix.getRowVector(ix);
+                double minValue = Math.abs(row.getMaxValue());
+                if( minValue == 0 ){
+                    row.setEntry(ix, 1);
+                    nullity++;
+                } else {
+                    for (int jx = 0; jx < row.getDimension(); jx++) {
+                        double val = row.getEntry(jx);
+                        if (Math.abs(val) < minValue && val != 0) {
+                            minValue = Math.abs(val);
+                        }
+                    }
+
+                    row.mapDivideToSelf(minValue);
+                }
+                matrix.setRow(ix, row.toArray());
+            }
+
+        } else {
+            /*(b) Determine the nullity, or dimensionality, of the matrix
+            null space of the chemical- composition matrix.*/
+            int rank = new SingularValueDecomposition(matrix).getRank();
+            nullity = matrix.getColumnDimension() - rank;
+            Log.i("(b)", "Nullity: " + String.valueOf(nullity));
+            /*(c) Augment the matrix with a number of rows equal to the
+            nullity number.*/
+            augmentedMatrix = MatrixUtils.createRealMatrix(matrix.getRowDimension() + nullity, matrix.getColumnDimension());
+            augmentedMatrix.setSubMatrix(matrix.getData(), 0, 0);
+            int maxRows = matrix.getRowDimension() + nullity;
+            for (int ix = matrix.getRowDimension(); ix < maxRows; ix++) {
+                augmentedMatrix.setEntry(ix, ix, 1);
+            }
         }
         Log.i("(c)", matrixToString(augmentedMatrix));
+
 
         /*(d) Compute the matrix inverse of the augmented matrix by
         using the built-in functions of a scientific calculator or
@@ -116,9 +102,9 @@ public class ReactionBalancer {
                 1 or more—should equal the nullity of the row-echelon
         matrix.) This defines the null space of the original
         chemical-composition matrix!*/
-        int nsvIndex = matrixInverse.getColumnDimension()-1;
-        RealVector nullSpaceVector = new ArrayRealVector( matrixInverse.getRowDimension() );
-        for( int ix = 0; ix < nullity; ix++ ){
+        int nsvIndex = matrixInverse.getColumnDimension() - 1;
+        nullSpaceVector = new ArrayRealVector(matrixInverse.getRowDimension());
+        for (int ix = 0; ix < nullity; ix++) {
             RealVector rv = matrixInverse.getColumnVector(nsvIndex - ix);
             nullSpaceVector = nullSpaceVector.add(rv);
         }
@@ -129,6 +115,7 @@ public class ReactionBalancer {
         coefficients which will ultimately balance the chemicalreaction
         equation.)*/
         // Not Needed because Vector is implemented in both ways
+
 
         /*(g) Make the smallest number in each transposed vector equal
         to 1 by dividing each vector element by the element of the
@@ -216,7 +203,7 @@ public class ReactionBalancer {
         return a;
     }
 
-    private RealMatrix reducedRowEchelonForm(RealMatrix matrix ) throws IllegalStateException{
+    private RealMatrix rowEchelonForm(RealMatrix matrix ) throws IllegalStateException{
         int i=0, j=0;
 
         /*
@@ -229,7 +216,7 @@ public class ReactionBalancer {
             Double aij = null;
             while( !found ) {
                 aij = matrix.getEntry(i, j);
-                if (aij.intValue() == 0) {
+                if (aij == 0) {
                     int search_i = i + 1;
                     double search_aij;
                     while (search_i < matrix.getRowDimension()) {
@@ -245,6 +232,9 @@ public class ReactionBalancer {
                     }
                     if (!found) {
                         j++;
+                        if( j == matrix.getColumnDimension() ){
+                            return matrix;
+                        }
                     }
                 } else {
                     found = true;

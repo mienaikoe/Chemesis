@@ -79,10 +79,8 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
         });
 
         // TODO: Debugging Code. Remove and replace with empty state!!
-        this.reaction.addReactant(Chemical.CH4_g);
-        this.reaction.addReactant(Chemical.O2_ref);
-        this.reaction.addProduct(Chemical.CO2_g);
-        this.reaction.addProduct(Chemical.H2O_g);
+        this.reaction.addReactant(Chemical.C2N2_g);
+        this.reaction.addProduct(Chemical.CN_g);
 
         this.reactantsAdapter = new ReactionChemicalArrayAdapter(
                 this, this.reaction.getReactants(), this.reaction);
