@@ -7,6 +7,7 @@ import java.util.Locale;
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.Parcelable;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 import io.tangent.chemesis.models.Chemical;
 import io.tangent.chemesis.models.Reaction;
 import io.tangent.chemesis.util.Callback;
+import io.tangent.chemesis.util.TypefaceCache;
 import io.tangent.chemesis.views.ReactionChemicalArrayAdapter;
 
 
@@ -139,6 +141,7 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
             }
         } else if( id == R.id.action_energetics ){
             Intent intent = new Intent(this, EnergeticsActivity.class);
+            intent.putExtra("reaction", this.reaction);
             this.startActivity(intent);
         }
 

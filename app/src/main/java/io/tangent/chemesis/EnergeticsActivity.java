@@ -6,14 +6,37 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.util.ArrayList;
+
+import io.tangent.chemesis.models.Reaction;
+import io.tangent.chemesis.models.Energetics;
+import io.tangent.chemesis.models.ReactionChemical;
+import io.tangent.chemesis.views.EnergeticsGraph;
+
 
 public class EnergeticsActivity extends ActionBarActivity {
+
+    private Energetics reactantEnergetics;
+    private Energetics productEnergetics;
+    private Energetics combinedEnergetics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_energetics);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.nist_purple)));
+
+        Reaction reaction = this.getIntent().getParcelableExtra("reaction");
+        this.reactantEnergetics = new Energetics(reaction.getReactants(), this );
+        this.productEnergetics = new Energetics(reaction.getProducts(), this);
+
+        ArrayList<ReactionChemical> chems = new ArrayList<ReactionChemical>(reaction.getReactants().size() + reaction.getProducts().size());
+        chems.addAll(reaction.getReactants());
+        chems.addAll(reaction.getProducts());
+        this.combinedEnergetics = new Energetics(chems, this);
+
+        EnergeticsGraph graph = (EnergeticsGraph)this.findViewById(R.id.energetics_graph);
+        graph.setEnergetics(this.reactantEnergetics, this.productEnergetics, this.combinedEnergetics);
     }
 
     @Override

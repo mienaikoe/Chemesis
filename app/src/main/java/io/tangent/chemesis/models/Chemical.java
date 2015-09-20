@@ -1,7 +1,5 @@
 package io.tangent.chemesis.models;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -1628,7 +1626,7 @@ public enum Chemical {
 
     private String formula;
 	private String formulaQuery;
-    private String file;
+    private String filename;
     private String state;
     private String name;
 	private String queryMatch;
@@ -1640,8 +1638,8 @@ public enum Chemical {
 		this.formula = Chemical.formatFormula(formula);
 		this.formulaQuery = formula.toUpperCase();
 
-        this.file = file;
-        this.state = state;
+        this.filename = file;
+        this.state = Chemical.parseState(state);
         this.name = name;
 		this.queryMatch = name.toUpperCase() + "|" + formula.toUpperCase();
         this.cas = cas;
@@ -1667,6 +1665,10 @@ public enum Chemical {
 		return state;
 	}
 
+	public String getFilename() {
+		return filename;
+	}
+
 	public static List<Chemical> find(String query){
 		query = query.toUpperCase();
 		List<Chemical> results = new ArrayList<Chemical>();
@@ -1681,6 +1683,8 @@ public enum Chemical {
 		}
 		return results;
 	}
+
+
 
 
 	private static HashMap<Element, Integer> parseComposition(String formula){
@@ -1711,5 +1715,50 @@ public enum Chemical {
 			}
 		}
 		return newFormula.toString();
+	}
+	
+	private static String parseState(String state){
+		String[] stateParts = state.split("_");
+		StringBuilder ret = new StringBuilder();
+		boolean first = true;
+		for( String part : stateParts ){
+			if( !first ){
+				ret.append(", ");
+			}
+			first = false;
+			switch(part){
+				case "vit":
+					ret.append("vitreous"); break;
+				case "cd":
+					ret.append("condensed"); break;
+				case "fl":
+					ret.append("fluid"); break;
+				case "g":
+					ret.append("gas"); break;
+				case "sat":
+					ret.append("saturated"); break;
+				case "l":
+					ret.append("liquid"); break;
+				case "am":
+					ret.append("amorophous"); break;
+				case "pol":
+					ret.append("polymeric"); break;
+				case "mon":
+					ret.append("monomeric"); break;
+				case "cr":
+					ret.append("crystalline"); break;
+				case "aq":
+					ret.append("aqueous solution"); break;
+				case "ref":
+					ret.append("Reference state"); break;
+				case "s":
+					ret.append("solid"); break;
+				case "sln":
+					ret.append("solution"); break;
+				default:
+					ret.append("");
+			}
+		}
+		return ret.toString();
 	}
 }

@@ -1,5 +1,8 @@
 package io.tangent.chemesis.models;
 
+import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 
@@ -25,10 +28,11 @@ import io.tangent.chemesis.util.Callback;
 /**
  * Created by Jesse on 9/7/2015.
  */
-public class Reaction {
 
-    private final List<ReactionChemical> reactants;
-    private final List<ReactionChemical> products;
+public class Reaction implements Parcelable{
+
+    private final ArrayList<ReactionChemical> reactants;
+    private final ArrayList<ReactionChemical> products;
     private boolean isBalanced = false;
     private Callback onInvalidate;
 
@@ -37,26 +41,35 @@ public class Reaction {
         this.products = new ArrayList<ReactionChemical>();
     }
 
-    public List<ReactionChemical> getProducts() {
+    private Reaction(Parcel in){
+        this.reactants = new ArrayList<ReactionChemical>();
+        this.products = new ArrayList<ReactionChemical>();
+
+        in.readTypedList(this.reactants, ReactionChemical.CREATOR);
+        in.readTypedList(this.products, ReactionChemical.CREATOR);
+        this.isBalanced = (in.readInt() == 1);
+    }
+
+    public ArrayList<ReactionChemical> getProducts() {
         return products;
     }
 
-    public List<ReactionChemical> getReactants() {
+    public ArrayList<ReactionChemical> getReactants() {
         return reactants;
     }
 
     public void addReactant(Chemical chemical){
-        this.reactants.add(new ReactionChemical(chemical, this));
+        this.reactants.add(new ReactionChemical(chemical, false));
         this.invalidateBalance();
     }
 
     public void addProduct(Chemical chemical){
-        this.products.add(new ReactionChemical(chemical, this));
+        this.products.add(new ReactionChemical(chemical, true));
         this.invalidateBalance();
     }
 
     public void remove(ReactionChemical chemical){
-        List<ReactionChemical> chemlist = null;
+        ArrayList<ReactionChemical> chemlist = null;
         if( this.reactants.contains(chemical) ){
             chemlist = this.reactants;
         } else if( this.products.contains(chemical) ){
@@ -105,9 +118,28 @@ public class Reaction {
 
 
 
+    // Parceling
 
+    public static final Parcelable.Creator<Reaction> CREATOR = new Parcelable.Creator<Reaction>() {
+        public Reaction createFromParcel(Parcel in) {
+            return new Reaction(in);
+        }
+        public Reaction[] newArray(int size) {
+            return new Reaction[size];
+        }
+    };
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
 
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeTypedList(this.reactants);
+        dest.writeTypedList(this.products);
+        dest.writeInt(this.isBalanced ? 1 : 0);
+    }
 }
 
 

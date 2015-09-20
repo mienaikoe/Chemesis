@@ -12,17 +12,17 @@ import java.util.List;
 import java.util.Map;
 
 import io.tangent.chemesis.R;
+import io.tangent.chemesis.util.TypefaceCache;
 
 
 public class TextViewPlus extends TextView {
 
     private static String TAG = "TextViewPlus";
-    private static final Map<String, Typeface> typefaceCache = new HashMap<String, Typeface>();
 
 
     public TextViewPlus(Context context) {
         super(context);
-        setCustomFont(context, "fonts/Kiro-Regular-webfont.ttf");
+        setCustomFont(context, TypefaceCache.KIRO);
     }
 
     public TextViewPlus(Context context, AttributeSet attrs) {
@@ -38,29 +38,18 @@ public class TextViewPlus extends TextView {
     private void setCustomFont(Context ctx, AttributeSet attrs) {
         TypedArray a = ctx.obtainStyledAttributes(attrs, R.styleable.TextViewPlus);
         String typeface = a.getString(R.styleable.TextViewPlus_typeface);
-        //String typeface = "fonts/Kiro-Regular-webfont.ttf";
+        TypefaceCache t = TypefaceCache.valueOf(typeface);
+        setCustomFont(ctx, t);
+        a.recycle();
+    }
+
+    private void setCustomFont(Context ctx, TypefaceCache type){
         try {
-            setCustomFont(ctx, typeface);
+            setTypeface(type.get(ctx));
         } catch( Exception ex ){
             Log.e(TAG, ex.getMessage());
             Log.e(TAG, ex.getStackTrace().toString());
         }
-        a.recycle();
-    }
-
-    public boolean setCustomFont(Context ctx, String asset) {
-        Typeface tf = TextViewPlus.typefaceCache.get(asset);
-        if( tf == null ) {
-            try {
-                tf = Typeface.createFromAsset(ctx.getAssets(), asset);
-            } catch (Exception e) {
-                Log.e(TAG, "Could not get typeface: " + e.getMessage());
-                return false;
-            }
-            TextViewPlus.typefaceCache.put(asset, tf);
-        }
-        setTypeface(tf);
-        return true;
     }
 
 

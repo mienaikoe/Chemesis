@@ -13,4 +13,7 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+
+    <string name="nist_disclaimer">This product uses data provided by the National Institute of Standards and Technology (NIST) but is not endorsed or certified by NIST.</string>
+    <string name="srd_energetics">101</string>
 </resources>

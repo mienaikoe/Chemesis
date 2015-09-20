@@ -98,8 +98,8 @@ public class ReactionBalancer {
 
         /*(e) Extract the null-space basis vectors from the inverted
         matrix. (The vectors will be the columns at the far right of
-        the inverted matrix; the number of columns included—0,
-                1 or more—should equal the nullity of the row-echelon
+        the inverted matrix; the number of columns included-0,
+                1 or more-should equal the nullity of the row-echelon
         matrix.) This defines the null space of the original
         chemical-composition matrix!*/
         int nsvIndex = matrixInverse.getColumnDimension() - 1;

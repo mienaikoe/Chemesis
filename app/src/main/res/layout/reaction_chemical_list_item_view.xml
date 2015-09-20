@@ -17,7 +17,7 @@
         android:layout_alignParentLeft="true"
         android:gravity="right"
         android:paddingRight="5dp"
-        chemesis:typeface="fonts/Kiro-Regular-webfont.ttf"
+        chemesis:typeface="KIRO"
         />
 
     <io.tangent.chemesis.views.TextViewPlus
@@ -29,7 +29,7 @@
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/chemical_count"
         android:layout_toLeftOf="@+id/remove_chemical"
-        chemesis:typeface="fonts/Kiro-Regular-webfont.ttf"/>
+        chemesis:typeface="KIRO"/>
 
     <io.tangent.chemesis.views.TextViewPlus
         android:id="@+id/chemical_formula"
@@ -40,7 +40,7 @@
         android:layout_alignLeft="@+id/chemical_name"
         android:layout_toLeftOf="@+id/remove_chemical"
         android:layout_below="@+id/chemical_name"
-        chemesis:typeface="fonts/Kiro-Regular-webfont.ttf"/>
+        chemesis:typeface="KIRO"/>
 
     <ImageButton
         android:id="@+id/remove_chemical"

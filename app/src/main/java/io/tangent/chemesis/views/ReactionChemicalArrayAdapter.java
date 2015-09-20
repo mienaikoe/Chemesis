@@ -77,7 +77,7 @@ public class ReactionChemicalArrayAdapter extends ArrayAdapter<ReactionChemical>
 
         @Override
         public void onClick(View v) {
-            this.reactionChemical.remove();
+            reaction.remove(this.reactionChemical);
             notifyDataSetChanged();
             this.reactionChemical = null; // for gc
         }
