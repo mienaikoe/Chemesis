@@ -1,13 +1,10 @@
 package io.tangent.chemesis;
 
-import java.sql.Time;
-import java.util.Date;
 import java.util.Locale;
 
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
-import android.os.Parcelable;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -22,11 +19,9 @@ import android.widget.Toast;
 import io.tangent.chemesis.models.Chemical;
 import io.tangent.chemesis.models.Reaction;
 import io.tangent.chemesis.util.Callback;
-import io.tangent.chemesis.util.TypefaceCache;
-import io.tangent.chemesis.views.ReactionChemicalArrayAdapter;
 
 
-public class MainActivity extends ActionBarActivity implements OnTabInteractionListener {
+public class MainActivity extends ActionBarActivity {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -48,19 +43,12 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
      */
 
     private Reaction reaction;
-    private ReactionChemicalArrayAdapter reactantsAdapter;
-    private ReactionChemicalArrayAdapter productsAdapter;
 
     private MenuItem balanceButton;
     private MenuItem energeticsButton;
 
-    private static final int REACTANTS_ADD = 0;
-    private static final int PRODUCTS_ADD = 1;
-
-
-    public Reaction getReaction() {
-        return reaction;
-    }
+    private static final int REACTANTS = 0;
+    private static final int PRODUCTS = 1;
 
 
 
@@ -72,29 +60,26 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // create fake reaction
-        this.reaction = new Reaction();
+        if( savedInstanceState != null ) {
+           this.reaction = savedInstanceState.getParcelable("reaction");
+        } else {
+            // create fake reaction
+            this.reaction = new Reaction();
+            // TODO: Debugging Code. Remove and replace with empty state!!
+            this.reaction.addReactant(Chemical.CH4_g);
+            this.reaction.addReactant(Chemical.O2_ref);
+            this.reaction.addProduct(Chemical.C5_g);
+            this.reaction.addProduct(Chemical.H2O_l);
+        }
+
         this.reaction.setOnInvalidate(new Callback<Object>() {
-            public void perform(Object thing){
+            public void perform(Object thing) {
                 invalidateOptionsMenu();
             }
         });
 
-        // TODO: Debugging Code. Remove and replace with empty state!!
-        this.reaction.addReactant(Chemical.C2N2_g);
-        this.reaction.addProduct(Chemical.CN_g);
-
-        this.reactantsAdapter = new ReactionChemicalArrayAdapter(
-                this, this.reaction.getReactants(), this.reaction);
-
-        this.productsAdapter = new ReactionChemicalArrayAdapter(
-                this, this.reaction.getProducts(), this.reaction);
-
         // paging adapter for fragments
-        mSectionsPagerAdapter = new SectionsPagerAdapter(
-                getSupportFragmentManager(),
-                this.reactantsAdapter, this.productsAdapter
-        );
+        mSectionsPagerAdapter = new SectionsPagerAdapter( getSupportFragmentManager(), this.reaction );
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
@@ -102,6 +87,14 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
 
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.nist_purple)));
     }
+
+
+    @Override
+    public void onSaveInstanceState(Bundle bundle){
+        bundle.putParcelable("reaction", this.reaction);
+    }
+
+
 
 
     @Override
@@ -133,11 +126,11 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
         if (id == R.id.action_balance) {
             try {
                 this.reaction.balance();
-                this.reactantsAdapter.notifyDataSetChanged();
-                this.productsAdapter.notifyDataSetChanged();
+                this.mSectionsPagerAdapter.getReactantsFragment().notifyDataSetChanged();
+                this.mSectionsPagerAdapter.getProductsFragment().notifyDataSetChanged();
                 this.invalidateOptionsMenu();
             } catch (IllegalStateException ex){
-                Toast.makeText(this, ex.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show();
             }
         } else if( id == R.id.action_energetics ){
             Intent intent = new Intent(this, EnergeticsActivity.class);
@@ -146,11 +139,6 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-        // TODO: IDK
     }
 
     @Override
@@ -169,15 +157,15 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
             Log.w("TAG", "Invalid Chemical: "+chemName);
             return;
         }
-        if( requestCode == REACTANTS_ADD ){
+        if( requestCode == REACTANTS){
             this.reaction.addReactant(chem);
-        } else if( requestCode == PRODUCTS_ADD ){
+        } else if( requestCode == PRODUCTS){
             this.reaction.addProduct(chem);
         } else {
             Log.e("TAG", "Invalid Request Code: "+String.valueOf(requestCode));
         }
-        this.reactantsAdapter.notifyDataSetChanged();
-        this.productsAdapter.notifyDataSetChanged();
+        this.mSectionsPagerAdapter.getReactantsFragment().notifyDataSetChanged();
+        this.mSectionsPagerAdapter.getProductsFragment().notifyDataSetChanged();
     }
 
     /**
@@ -189,22 +177,26 @@ public class MainActivity extends ActionBarActivity implements OnTabInteractionL
         private ChemlistFragment reactantsFragment;
         private ChemlistFragment productsFragment;
 
-        public SectionsPagerAdapter(FragmentManager fm,
-                                    ReactionChemicalArrayAdapter reactantsAdapter,
-                                    ReactionChemicalArrayAdapter productsAdapter) {
+        public SectionsPagerAdapter(FragmentManager fm, Reaction reaction) {
             super(fm);
-            this.reactantsFragment = ChemlistFragment.newInstance(
-                    reactantsAdapter, REACTANTS_ADD);
-            this.productsFragment = ChemlistFragment.newInstance(
-                    productsAdapter, PRODUCTS_ADD);
+            this.reactantsFragment = ChemlistFragment.newInstance(reaction, false, REACTANTS);
+            this.productsFragment = ChemlistFragment.newInstance(reaction, true, PRODUCTS);
+        }
+
+        public ChemlistFragment getReactantsFragment(){
+            return this.reactantsFragment;
+        }
+
+        public ChemlistFragment getProductsFragment(){
+            return this.productsFragment;
         }
 
         @Override
         public Fragment getItem(int position) {
             switch(position){
-                case 0:
+                case REACTANTS:
                     return reactantsFragment;
-                case 1:
+                case PRODUCTS:
                     return productsFragment;
                 default:
                     throw new IllegalArgumentException("Invalid Index for Fragment");

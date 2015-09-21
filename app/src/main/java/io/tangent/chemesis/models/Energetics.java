@@ -1,6 +1,9 @@
 package io.tangent.chemesis.models;
 
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,7 +17,7 @@ import java.util.TreeMap;
 /**
  * Created by Jesse on 9/19/2015.
  */
-public class Energetics {
+public class Energetics implements Parcelable{
 
     private NavigableMap<Double, EnergeticsEntry> data = new TreeMap<Double, EnergeticsEntry>();
 
@@ -28,11 +31,27 @@ public class Energetics {
                 Double temperature = Double.valueOf(tempPoint.getString("T"));
 
                 JSONObject values = tempPoint.getJSONObject("values");
-                double gibbs = Double.valueOf(values.optString("delta-f G°", "0"));
-                double enthalpy = Double.valueOf(values.optString("delta-f H°", "0"));
-                double entropy = Double.valueOf(values.optString("S°", "0"));
 
-                this.data.put(temperature, new EnergeticsEntry(multiplier * gibbs, multiplier * enthalpy, multiplier * entropy));
+                Double gibbs = null, enthalpy = null, entropy = null;
+                String gibbsStr = values.optString("delta-f G°");
+                if( !gibbsStr.isEmpty() ){
+                    gibbs = Double.valueOf(gibbsStr);
+                }
+
+                String enthStr = values.optString("delta-f H°");
+                if( !enthStr.isEmpty() ){
+                    enthalpy = Double.valueOf(enthStr);
+                }
+
+                String entrStr = values.optString("S°");
+                if( !entrStr.isEmpty() ){
+                    entropy = Double.valueOf(entrStr);
+                }
+                this.data.put(temperature, new EnergeticsEntry(
+                        gibbs != null ? multiplier * gibbs : null,
+                        enthalpy != null ? multiplier * enthalpy : null,
+                        entropy != null ? multiplier * entropy : null)
+                );
             }
         } catch (JSONException ex){
             ex.printStackTrace();
@@ -43,29 +62,38 @@ public class Energetics {
     public Energetics( List<ReactionChemical> reactionChemicals, Context context ){
         for( ReactionChemical rc : reactionChemicals ){
             Energetics en = rc.getEnergetics( context );
+            Log.i("TAG", rc.getChemical().getName());
             if( this.data.isEmpty() ){
-                this.data.putAll(en.getData());
+                for( Map.Entry<Double, EnergeticsEntry> point : en.getData().entrySet() ){
+                    this.data.put(point.getKey(), point.getValue().copy());
+                }
             } else {
-                for (Map.Entry<Double, EnergeticsEntry> entry : en.getData().entrySet()) {
-                    EnergeticsEntry point = entry.getValue();
-                    if (this.data.containsKey(entry.getKey())) {
-                        this.data.get(entry.getKey()).add(point);
+                for (Map.Entry<Double, EnergeticsEntry> point : en.getData().entrySet()) {
+                    Log.i("TAG", point.getValue().toString());
+                    if (this.data.containsKey(point.getKey())) {
+                        this.data.get(point.getKey()).add(point.getValue());
                     } else {
-                        Map.Entry<Double, EnergeticsEntry> ceil = this.data.ceilingEntry(entry.getKey());
-                        Map.Entry<Double, EnergeticsEntry> floor = this.data.floorEntry(entry.getKey());
-                        EnergeticsEntry newEntry;
-                        if (ceil == null) {
-                            newEntry = floor.getValue().copy();
-                        } else if (floor == null) {
-                            newEntry = ceil.getValue().copy();
+                        Map.Entry<Double, EnergeticsEntry> higher = this.data.higherEntry(point.getKey());
+                        Map.Entry<Double, EnergeticsEntry> lower = this.data.lowerEntry(point.getKey());
+                        if (higher == null || lower == null) {
+                            // point exceeds existing data. don't do anything
                         } else {
-                            newEntry = EnergeticsEntry.extrapolate(
-                                    floor.getValue(), ceil.getValue(),
-                                    ((entry.getKey() - floor.getKey()) / (ceil.getKey() - floor.getKey()))
+                            EnergeticsEntry newEntry = EnergeticsEntry.extrapolate(
+                                    lower.getValue(), higher.getValue(),
+                                    ((point.getKey() - lower.getKey()) / (higher.getKey() - lower.getKey()))
                             );
+
+                            Log.i("Extrapolating",
+                                    reactionChemicals.size() + "\r\n" +
+                                    lower.getValue() + "\r\n" +
+                                    newEntry + "\r\n" +
+                                    higher.getValue() + "\r\n"
+                            );
+
+                            newEntry.add(point.getValue());
+                            Log.i("TAG", newEntry.toString() + "+");
+                            this.data.put(point.getKey(), newEntry);
                         }
-                        newEntry.add(point);
-                        this.data.put(entry.getKey(), newEntry);
                     }
                 }
             }
@@ -79,5 +107,49 @@ public class Energetics {
     }
 
 
+
+    
+    
+    // Parceling
+
+    private Energetics(Parcel in){
+        int size = in.readInt();
+        for( int ix=0; ix < size; ix++ ){
+            this.data.put(in.readDouble(), (EnergeticsEntry)in.readParcelable(EnergeticsEntry.class.getClassLoader()));
+        }
+    }
+
+    public static final Parcelable.Creator<Energetics> CREATOR = new Parcelable.Creator<Energetics>() {
+        public Energetics createFromParcel(Parcel in) {
+            return new Energetics(in);
+        }
+        public Energetics[] newArray(int size) {
+            return new Energetics[size];
+        }
+    };
+    
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(this.data.size());
+        for( Map.Entry<Double, EnergeticsEntry> entry : this.data.entrySet() ){
+            dest.writeDouble(entry.getKey());
+            dest.writeParcelable(entry.getValue(), 0);
+        }
+    }
+
+
+
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        for( Map.Entry<Double, EnergeticsEntry> entry : this.data.entrySet() ){
+            sb.append(entry.getKey()).append(": ").append(entry.getValue().toString()).append("\r\n");
+        }
+        return sb.toString();
+    }
 }
 

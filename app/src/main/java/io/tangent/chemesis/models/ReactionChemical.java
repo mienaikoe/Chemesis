@@ -3,6 +3,7 @@ package io.tangent.chemesis.models;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,6 +23,7 @@ public class ReactionChemical implements Parcelable{
     private final Chemical chemical;
     private Integer parts;
     private boolean isProduct;
+    private Energetics energetics;
 
     public ReactionChemical(Chemical chemical, boolean isProduct){
         this.chemical = chemical;
@@ -30,7 +32,7 @@ public class ReactionChemical implements Parcelable{
 
     private ReactionChemical(Parcel in){
         this.chemical = Chemical.valueOf(in.readString());
-        this.parts = in.readInt();
+        this.parts = (Integer)in.readSerializable();
         this.isProduct = in.readInt() == 1;
     }
 
@@ -40,6 +42,7 @@ public class ReactionChemical implements Parcelable{
 
     public void setParts(Integer parts) {
         this.parts = parts;
+        this.energetics = null;
     }
 
     public Chemical getChemical() {
@@ -48,8 +51,10 @@ public class ReactionChemical implements Parcelable{
 
 
 
-
     public Energetics getEnergetics(Context context){
+        if( this.energetics != null ){
+            return this.energetics;
+        }
         try {
             InputStream istr = null;
             istr = context.getAssets().open("chemistry/"+this.chemical.getFilename());
@@ -63,7 +68,9 @@ public class ReactionChemical implements Parcelable{
             }
             JSONObject energeticsJson = new JSONObject(responseStrBuilder.toString());
 
-            return new Energetics(energeticsJson, (this.isProduct ? this.parts : -this.parts) );
+            this.energetics = new Energetics(energeticsJson, (this.isProduct ? this.parts : -this.parts) );
+            return this.energetics;
+
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException("File "+this.chemical.getFilename()+" does not exist");
         } catch (UnsupportedEncodingException e) {
@@ -102,7 +109,7 @@ public class ReactionChemical implements Parcelable{
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(chemical.name());
-        dest.writeInt(parts);
+        dest.writeSerializable(parts);
         dest.writeInt(isProduct ? 1 : 0);
     }
 }

@@ -26,17 +26,31 @@ public class EnergeticsActivity extends ActionBarActivity {
         setContentView(R.layout.activity_energetics);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.nist_purple)));
 
-        Reaction reaction = this.getIntent().getParcelableExtra("reaction");
-        this.reactantEnergetics = new Energetics(reaction.getReactants(), this );
-        this.productEnergetics = new Energetics(reaction.getProducts(), this);
+        if( savedInstanceState != null ){
+            this.reactantEnergetics = savedInstanceState.getParcelable("reactant");
+            this.productEnergetics = savedInstanceState.getParcelable("product");
+            this.combinedEnergetics = savedInstanceState.getParcelable("combined");
+        } else {
+            Reaction reaction = this.getIntent().getParcelableExtra("reaction");
+            this.reactantEnergetics = new Energetics(reaction.getReactants(), this);
+            this.productEnergetics = new Energetics(reaction.getProducts(), this);
 
-        ArrayList<ReactionChemical> chems = new ArrayList<ReactionChemical>(reaction.getReactants().size() + reaction.getProducts().size());
-        chems.addAll(reaction.getReactants());
-        chems.addAll(reaction.getProducts());
-        this.combinedEnergetics = new Energetics(chems, this);
+            ArrayList<ReactionChemical> chems = new ArrayList<>(reaction.getReactants().size() + reaction.getProducts().size());
+            chems.addAll(reaction.getReactants());
+            chems.addAll(reaction.getProducts());
+            this.combinedEnergetics = new Energetics(chems, this);
+        }
 
         EnergeticsGraph graph = (EnergeticsGraph)this.findViewById(R.id.energetics_graph);
         graph.setEnergetics(this.reactantEnergetics, this.productEnergetics, this.combinedEnergetics);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable("reactant", this.reactantEnergetics);
+        outState.putParcelable("product", this.productEnergetics);
+        outState.putParcelable("combined", this.combinedEnergetics);
     }
 
     @Override

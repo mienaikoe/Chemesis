@@ -10,6 +10,10 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ListView;
 
+import java.util.List;
+
+import io.tangent.chemesis.models.Reaction;
+import io.tangent.chemesis.models.ReactionChemical;
 import io.tangent.chemesis.views.ReactionChemicalArrayAdapter;
 
 
@@ -21,8 +25,10 @@ import io.tangent.chemesis.views.ReactionChemicalArrayAdapter;
 public class ChemlistFragment extends Fragment implements View.OnClickListener {
 
     private int addRequestId;
+    private Reaction reaction;
+    private boolean isProduct;
+
     private ReactionChemicalArrayAdapter mAdapter;
-    private OnTabInteractionListener mListener;
     private Activity parentActivity;
 
     /**
@@ -32,10 +38,9 @@ public class ChemlistFragment extends Fragment implements View.OnClickListener {
      * @return A new instance of fragment BuildFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static ChemlistFragment newInstance(ReactionChemicalArrayAdapter adapter, int addRequestId) {
+    public static ChemlistFragment newInstance(Reaction reaction, boolean isProduct, int addRequestId) {
         ChemlistFragment fragment = new ChemlistFragment();
-        fragment.setAddRequestId(addRequestId);
-        fragment.setAdapter(adapter);
+        fragment.init(reaction, isProduct, addRequestId);
         return fragment;
     }
 
@@ -43,13 +48,36 @@ public class ChemlistFragment extends Fragment implements View.OnClickListener {
         // Required empty public constructor
     }
 
-    private void setAddRequestId(int requestId){
-        this.addRequestId = requestId;
+    private void init(Reaction reaction, boolean isProduct, int addRequestId) {
+        this.reaction = reaction;
+        this.isProduct = isProduct;
+        this.addRequestId = addRequestId;
+        this.initAdapter();
     }
 
-    private void setAdapter(ReactionChemicalArrayAdapter adapter){
-        this.mAdapter = adapter;
+    private void initAdapter(){
+        if( this.mAdapter == null && this.parentActivity != null && this.reaction != null ) {
+            this.mAdapter = new ReactionChemicalArrayAdapter(
+                    this.getActivity(), (isProduct ? this.reaction.getProducts() : this.reaction.getReactants()), this.reaction
+            );
+        }
     }
+
+
+    @Override
+    public void onCreate (Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            //savedInstanceState.setClassLoader(getClass().getClassLoader());
+            this.init(
+                    (Reaction) savedInstanceState.getParcelable("reaction"),
+                    savedInstanceState.getBoolean("isProduct"),
+                    savedInstanceState.getInt("addRequestId")
+            );
+        }
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -57,17 +85,21 @@ public class ChemlistFragment extends Fragment implements View.OnClickListener {
         // Inflate the layout for this fragment
         View ret = inflater.inflate(R.layout.fragment_chemlist, container, false);
         ListView list = (ListView)ret.findViewById(R.id.chemlist);
+
+        this.initAdapter();
         list.setAdapter(this.mAdapter);
 
         ImageButton addButton = (ImageButton)ret.findViewById(R.id.add_chemical);
         addButton.setOnClickListener(this);
+
+
 
         return ret;
     }
 
     @Override
     public void onClick(View v) {
-        Intent intent = new Intent(parentActivity, SearchActivity.class);
+        Intent intent = new Intent(this.getActivity(), SearchActivity.class);
         getActivity().startActivityForResult(intent, addRequestId);
     }
 
@@ -75,18 +107,24 @@ public class ChemlistFragment extends Fragment implements View.OnClickListener {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         this.parentActivity = activity;
-        try {
-            mListener = (OnTabInteractionListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement OnTabInteractionListener");
-        }
+        this.initAdapter();
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
+    }
+
+    public void onSaveInstanceState(Bundle savedState) {
+        super.onSaveInstanceState(savedState);
+        // Note: getValues() is a method in your ArrayAdaptor subclass
+        savedState.putParcelable("reaction", this.reaction);
+        savedState.putBoolean("isProduct", this.isProduct);
+        savedState.putInt("addRequestId", this.addRequestId);
+    }
+
+    public void notifyDataSetChanged(){
+        this.mAdapter.notifyDataSetChanged();
     }
 
 

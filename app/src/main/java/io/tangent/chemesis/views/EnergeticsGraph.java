@@ -31,13 +31,16 @@ public class EnergeticsGraph extends View {
     private float minVal;
     private EnergeticsField mode = EnergeticsField.GIBBS;
 
-
     private Paint reactantsPaint = new Paint();
     private Paint productsPaint = new Paint();
     private Paint combinedPaint = new Paint();
     private Paint axisPaint = new Paint();
     private Paint textPaint = new Paint();
     private int axisPadding;
+
+    private double conversionRatioX;
+    private double conversionRatioY;
+    private float graphStart;
 
 
     public EnergeticsGraph(Context context) {
@@ -97,6 +100,7 @@ public class EnergeticsGraph extends View {
         axisPaint.setStrokeCap(Paint.Cap.ROUND);
 
         this.axisPadding = (int)getResources().getDimension(R.dimen.graph_axis_padding);
+        this.graphStart = this.axisPadding + (int)getResources().getDimension(R.dimen.graph_axis_stroke);
     }
 
     @Override
@@ -118,80 +122,71 @@ public class EnergeticsGraph extends View {
         int contentHeight = getHeight() - paddingTop - paddingBottom;
 
         int maxY = contentHeight - this.axisPadding;
-        int graphStart = this.axisPadding + (int)getResources().getDimension(R.dimen.graph_axis_stroke);
 
-        double conversionRatioX = (contentWidth - graphStart) / ( maxTemp );
+        this.conversionRatioX = (contentWidth - graphStart) / ( maxTemp );
         float graphSpaceY = contentHeight - graphStart;
-        double conversionRatioY = (graphSpaceY) / ( maxVal - minVal );
+        this.conversionRatioY = (graphSpaceY) / ( maxVal - minVal );
         float xAxisY = graphSpaceY - (float)((0 - minVal) * conversionRatioY);
 
         // Y Axis
         canvas.drawLine(this.axisPadding, 0, this.axisPadding, maxY, this.axisPaint);
         // X Axis
-        canvas.drawLine(this.axisPadding, xAxisY, contentWidth, xAxisY, this.axisPaint );
+        canvas.drawLine(this.axisPadding, xAxisY, contentWidth, xAxisY, this.axisPaint);
 
-        Float lastX = null;
-        Float lastY = null;
-        /*
-        for( Map.Entry<Double, EnergeticsEntry> entry : this.reactantEnergetics.getData().entrySet() ){
-            float x = graphStart + (float)(entry.getKey() * conversionRatioX);
-            float y = -(float)(entry.getValue().get(this.mode) * conversionRatioY) + xAxisY;
-            if( lastX != null ){
-                canvas.drawLine( lastX, lastY, x, y, this.reactantsPaint );
-            }
-            lastX = x;
-            lastY = y;
-        }
 
-        lastX = null;
-        lastY = null;
-        for( Map.Entry<Double, EnergeticsEntry> entry : this.productEnergetics.getData().entrySet() ){
-            float x = graphStart + (float)(entry.getKey() * conversionRatioX);
-            float y = -(float)(entry.getValue().get(this.mode) * conversionRatioY) + xAxisY;
-            if( lastX != null ){
-                canvas.drawLine( lastX, lastY, x, y, this.productsPaint );
-            }
-            lastX = x;
-            lastY = y;
-        }
-        */
-
-        lastX = null;
-        lastY = null;
-        for( Map.Entry<Double, EnergeticsEntry> entry : this.combinedEnergetics.getData().entrySet() ){
-            float x = graphStart + (float)(entry.getKey() * conversionRatioX);
-            float y = -(float)(entry.getValue().get(this.mode) * conversionRatioY) + xAxisY;
-            if( lastX != null ){
-                canvas.drawLine( lastX, lastY, x, y, this.combinedPaint );
-            }
-            lastX = x;
-            lastY = y;
-        }
-
+        this.graphLine(this.reactantEnergetics, xAxisY, this.reactantsPaint, canvas);
+        this.graphLine(this.productEnergetics, xAxisY, this.productsPaint, canvas);
+        this.graphLine(this.combinedEnergetics, xAxisY, this.combinedPaint, canvas);
 
     }
+
+
+
+    private void graphLine( Energetics energetics, float xAxisY, Paint paint, Canvas canvas ){
+        Float lastX = null;
+        Float lastY = null;
+        for( Map.Entry<Double, EnergeticsEntry> entry : energetics.getData().entrySet() ){
+            Double val = entry.getValue().get(this.mode);
+            if( val != null ) {
+                float x = graphStart + (float) (entry.getKey() * conversionRatioX);
+                float y = -(float) (val * conversionRatioY) + xAxisY;
+                if (lastX != null) {
+                    canvas.drawLine(lastX, lastY, x, y, paint);
+                }
+                lastX = x;
+                lastY = y;
+            }
+        }
+    }
+
 
     private void calculateMaxVal(){
         double maxVal = 0, minVal = 0;
         for( EnergeticsEntry ee : this.reactantEnergetics.getData().values() ){
-            double val = ee.get(this.mode);
-            if( val > maxVal ){
+            Double val = ee.get(this.mode);
+            if( val == null ){
+                continue;
+            } else if( val > maxVal ){
                 maxVal = val;
             } else if( val < minVal ){
                 minVal = val;
             }
         }
         for( EnergeticsEntry ee : this.productEnergetics.getData().values() ){
-            double val = ee.get(this.mode);
-            if( val > maxVal ){
+            Double val = ee.get(this.mode);
+            if( val == null ){
+                continue;
+            } else if( val > maxVal ){
                 maxVal = val;
             } else if( val < minVal ){
                 minVal = val;
             }
         }
         for( EnergeticsEntry ee : this.combinedEnergetics.getData().values() ){
-            double val = ee.get(this.mode);
-            if( val > maxVal ){
+            Double val = ee.get(this.mode);
+            if( val == null ){
+                continue;
+            } else if( val > maxVal ){
                 maxVal = val;
             } else if( val < minVal ){
                 minVal = val;

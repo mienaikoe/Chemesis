@@ -41,14 +41,6 @@ public class Reaction implements Parcelable{
         this.products = new ArrayList<ReactionChemical>();
     }
 
-    private Reaction(Parcel in){
-        this.reactants = new ArrayList<ReactionChemical>();
-        this.products = new ArrayList<ReactionChemical>();
-
-        in.readTypedList(this.reactants, ReactionChemical.CREATOR);
-        in.readTypedList(this.products, ReactionChemical.CREATOR);
-        this.isBalanced = (in.readInt() == 1);
-    }
 
     public ArrayList<ReactionChemical> getProducts() {
         return products;
@@ -119,6 +111,16 @@ public class Reaction implements Parcelable{
 
 
     // Parceling
+
+
+    private Reaction(Parcel in){
+        this.reactants = new ArrayList<ReactionChemical>();
+        this.products = new ArrayList<ReactionChemical>();
+
+        in.readTypedList(this.reactants, ReactionChemical.CREATOR);
+        in.readTypedList(this.products, ReactionChemical.CREATOR);
+        this.isBalanced = (in.readInt() == 1);
+    }
 
     public static final Parcelable.Creator<Reaction> CREATOR = new Parcelable.Creator<Reaction>() {
         public Reaction createFromParcel(Parcel in) {

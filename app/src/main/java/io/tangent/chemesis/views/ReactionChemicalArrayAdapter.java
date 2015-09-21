@@ -1,6 +1,8 @@
 package io.tangent.chemesis.views;
 
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +14,7 @@ import java.util.List;
 
 import io.tangent.chemesis.R;
 import io.tangent.chemesis.models.Chemical;
+import io.tangent.chemesis.models.EnergeticsField;
 import io.tangent.chemesis.models.Reaction;
 import io.tangent.chemesis.models.ReactionChemical;
 
@@ -20,24 +23,25 @@ import io.tangent.chemesis.models.ReactionChemical;
  */
 public class ReactionChemicalArrayAdapter extends ArrayAdapter<ReactionChemical> {
 
-    private List<ReactionChemical> mObjects;
+    private List<ReactionChemical> chemicals;
     private Reaction reaction;
     private LayoutInflater mInflater;
 
 
-    public ReactionChemicalArrayAdapter(Context context, List<ReactionChemical> objects, Reaction reaction) {
-        super(context, 0, objects);
+    public ReactionChemicalArrayAdapter(Context context, List<ReactionChemical> chemicals, Reaction reaction) {
+        super(context, 0);
+        this.chemicals = chemicals;
         this.mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        this.mObjects = objects;
         this.reaction = reaction;
     }
 
+
     public int getCount(){
-        return this.mObjects.size();
+        return this.chemicals.size();
     }
 
     public View getView( int position, View ret, ViewGroup parent  ) {
-        ReactionChemical chem = this.mObjects.get(position);
+        ReactionChemical chem = this.chemicals.get(position);
 
         if (ret == null) {
             ret = mInflater.inflate(R.layout.reaction_chemical_list_item_view, null);
@@ -62,7 +66,6 @@ public class ReactionChemicalArrayAdapter extends ArrayAdapter<ReactionChemical>
         // conditionals
         return ret;
     }
-
 
 
 
