@@ -69,7 +69,7 @@ public class MainActivity extends ActionBarActivity {
             this.reaction.addReactant(Chemical.CH4_g);
             this.reaction.addReactant(Chemical.O2_ref);
             this.reaction.addProduct(Chemical.C5_g);
-            this.reaction.addProduct(Chemical.H2O_l);
+            this.reaction.addProduct(Chemical.H2O_g);
         }
 
         this.reaction.setOnInvalidate(new Callback<Object>() {

@@ -68,34 +68,30 @@ public class Energetics implements Parcelable{
                     this.data.put(point.getKey(), point.getValue().copy());
                 }
             } else {
-                for (Map.Entry<Double, EnergeticsEntry> point : en.getData().entrySet()) {
-                    Log.i("TAG", point.getValue().toString());
-                    if (this.data.containsKey(point.getKey())) {
-                        this.data.get(point.getKey()).add(point.getValue());
-                    } else {
-                        Map.Entry<Double, EnergeticsEntry> higher = this.data.higherEntry(point.getKey());
-                        Map.Entry<Double, EnergeticsEntry> lower = this.data.lowerEntry(point.getKey());
-                        if (higher == null || lower == null) {
-                            // point exceeds existing data. don't do anything
-                        } else {
-                            EnergeticsEntry newEntry = EnergeticsEntry.extrapolate(
-                                    lower.getValue(), higher.getValue(),
-                                    ((point.getKey() - lower.getKey()) / (higher.getKey() - lower.getKey()))
-                            );
+                Double highestLow = Math.max(this.data.firstKey(), en.getData().firstKey());
+                Double lowestHigh = Math.min(this.data.lastKey(),  en.getData().lastKey());
+                highestLow = this.data.ceilingKey(highestLow);
+                lowestHigh = this.data.floorKey(lowestHigh);
+                TreeMap<Double, EnergeticsEntry> newData = new TreeMap<Double, EnergeticsEntry>();
+                for( Double indexTemp = highestLow ; indexTemp != null && indexTemp <= lowestHigh; indexTemp = this.data.higherKey(indexTemp) ){
+                    Log.i("TAG", indexTemp.toString());
+                    EnergeticsEntry thisEnergy = this.data.get(indexTemp);
+                    EnergeticsEntry incomingEnergy = en.getData().get(indexTemp);
+                    if ( incomingEnergy == null ) {
+                        Map.Entry<Double, EnergeticsEntry> lower  = en.getData().lowerEntry(indexTemp);
+                        Map.Entry<Double, EnergeticsEntry> higher = en.getData().higherEntry(indexTemp);
+                        incomingEnergy = EnergeticsEntry.extrapolate(
+                                lower.getValue(), higher.getValue(),
+                                (indexTemp - lower.getKey()) / (higher.getKey() - lower.getKey())
+                        );
 
-                            Log.i("Extrapolating",
-                                    reactionChemicals.size() + "\r\n" +
-                                    lower.getValue() + "\r\n" +
-                                    newEntry + "\r\n" +
-                                    higher.getValue() + "\r\n"
-                            );
-
-                            newEntry.add(point.getValue());
-                            Log.i("TAG", newEntry.toString() + "+");
-                            this.data.put(point.getKey(), newEntry);
-                        }
                     }
+                    EnergeticsEntry newEnergy = thisEnergy.copy();
+                    newEnergy.add(incomingEnergy);
+                    Log.i("TAG", newEnergy.toString());
+                    newData.put(indexTemp, newEnergy);
                 }
+                this.data = newData;
             }
         }
     }

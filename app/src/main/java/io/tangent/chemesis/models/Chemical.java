@@ -1750,13 +1750,11 @@ public enum Chemical {
 				case "aq":
 					ret.append("aqueous solution"); break;
 				case "ref":
-					ret.append("Reference state"); break;
+					ret.append("reference state"); break;
 				case "s":
 					ret.append("solid"); break;
 				case "sln":
 					ret.append("solution"); break;
-				default:
-					ret.append("");
 			}
 		}
 		return ret.toString();

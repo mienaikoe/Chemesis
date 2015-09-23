@@ -48,7 +48,7 @@ public class ChemicalArrayAdapter extends ArrayAdapter<Chemical> {
         }
 
         TextView chemicalName = (TextView) ret.findViewById(R.id.chemical_name);
-        chemicalName.setText(chem.getName());
+        chemicalName.setText(chem.getName() + " (" + chem.getState() + ")");
 
         TextView chemicalFormula = (TextView) ret.findViewById(R.id.chemical_formula);
         chemicalFormula.setText(chem.getFormula());
