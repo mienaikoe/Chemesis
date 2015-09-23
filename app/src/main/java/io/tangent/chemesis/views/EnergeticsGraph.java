@@ -3,6 +3,7 @@ package io.tangent.chemesis.views;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -75,20 +76,22 @@ public class EnergeticsGraph extends View {
 
     private void init(AttributeSet attrs, int defStyle) {
         // Load attributes
-
         // Set up a default TextPaint object
 
         textPaint.setColor(MAIN_COLOR);
         textPaint.setTypeface(TypefaceCache.KIRO.get(this.getContext()));
-        textPaint.setTextSize(R.dimen.graph_text_size);
+        textPaint.setTextSize(getResources().getDimension(R.dimen.graph_text_size));
+        textPaint.setTextAlign(Paint.Align.CENTER);
 
         reactantsPaint.setColor(Color.CYAN);
         reactantsPaint.setStrokeWidth((int) getResources().getDimension(R.dimen.graph_line_stroke));
         reactantsPaint.setStrokeJoin(Paint.Join.ROUND);
+        reactantsPaint.setPathEffect(new DashPathEffect(new float[]{10, 20}, 0));
 
         productsPaint.setColor(Color.MAGENTA);
         productsPaint.setStrokeWidth((int) getResources().getDimension(R.dimen.graph_line_stroke));
         productsPaint.setStrokeJoin(Paint.Join.ROUND);
+        productsPaint.setPathEffect(new DashPathEffect(new float[]{10, 20}, 0));
 
         combinedPaint.setColor(Color.YELLOW);
         combinedPaint.setStrokeWidth((int) getResources().getDimension(R.dimen.graph_line_stroke));
@@ -134,17 +137,17 @@ public class EnergeticsGraph extends View {
         canvas.drawLine(this.axisPadding, xAxisY, contentWidth, xAxisY, this.axisPaint);
 
 
-        this.graphLine(this.reactantEnergetics, xAxisY, this.reactantsPaint, canvas);
-        this.graphLine(this.productEnergetics, xAxisY, this.productsPaint, canvas);
-        this.graphLine(this.combinedEnergetics, xAxisY, this.combinedPaint, canvas);
+        this.graphLine(this.reactantEnergetics, xAxisY, this.reactantsPaint, false, canvas);
+        this.graphLine(this.productEnergetics,  xAxisY, this.productsPaint,  false, canvas);
+        this.graphLine(this.combinedEnergetics, xAxisY, this.combinedPaint,  true,  canvas);
 
     }
 
 
 
-    private void graphLine( Energetics energetics, float xAxisY, Paint paint, Canvas canvas ){
-        Float lastX = null;
-        Float lastY = null;
+    private void graphLine( Energetics energetics, float xAxisY, Paint paint, boolean yLabel, Canvas canvas ){
+        Float lastX = null, lastY = null;
+        Float firstY = null;
         for( Map.Entry<Double, EnergeticsEntry> entry : energetics.getData().entrySet() ){
             Double val = entry.getValue().get(this.mode);
             if( val != null ) {
@@ -153,9 +156,20 @@ public class EnergeticsGraph extends View {
                 if (lastX != null) {
                     canvas.drawLine(lastX, lastY, x, y, paint);
                 }
+                if( firstY == null ){
+                    firstY = y;
+                }
                 lastX = x;
                 lastY = y;
             }
+        }
+        if( yLabel ) {
+            canvas.save();
+            canvas.rotate(-90);
+            canvas.drawText(
+                    energetics.getData().firstEntry().getValue().get(this.mode).toString() + " " + this.mode.getUnits(),
+                    -firstY, (this.axisPadding / 2), this.textPaint);
+            canvas.restore();
         }
     }
 

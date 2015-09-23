@@ -62,7 +62,6 @@ public class Energetics implements Parcelable{
     public Energetics( List<ReactionChemical> reactionChemicals, Context context ){
         for( ReactionChemical rc : reactionChemicals ){
             Energetics en = rc.getEnergetics( context );
-            Log.i("TAG", rc.getChemical().getName());
             if( this.data.isEmpty() ){
                 for( Map.Entry<Double, EnergeticsEntry> point : en.getData().entrySet() ){
                     this.data.put(point.getKey(), point.getValue().copy());
@@ -74,7 +73,6 @@ public class Energetics implements Parcelable{
                 lowestHigh = this.data.floorKey(lowestHigh);
                 TreeMap<Double, EnergeticsEntry> newData = new TreeMap<Double, EnergeticsEntry>();
                 for( Double indexTemp = highestLow ; indexTemp != null && indexTemp <= lowestHigh; indexTemp = this.data.higherKey(indexTemp) ){
-                    Log.i("TAG", indexTemp.toString());
                     EnergeticsEntry thisEnergy = this.data.get(indexTemp);
                     EnergeticsEntry incomingEnergy = en.getData().get(indexTemp);
                     if ( incomingEnergy == null ) {
@@ -88,7 +86,6 @@ public class Energetics implements Parcelable{
                     }
                     EnergeticsEntry newEnergy = thisEnergy.copy();
                     newEnergy.add(incomingEnergy);
-                    Log.i("TAG", newEnergy.toString());
                     newData.put(indexTemp, newEnergy);
                 }
                 this.data = newData;
