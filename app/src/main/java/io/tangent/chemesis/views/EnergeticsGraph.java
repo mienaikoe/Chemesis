@@ -5,10 +5,14 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PathEffect;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
+import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,32 +20,38 @@ import io.tangent.chemesis.R;
 import io.tangent.chemesis.models.Energetics;
 import io.tangent.chemesis.models.EnergeticsEntry;
 import io.tangent.chemesis.models.EnergeticsField;
+import io.tangent.chemesis.models.EnergeticsSet;
 import io.tangent.chemesis.util.TypefaceCache;
 
 /**
  * TODO: document your custom view class.
  */
-public class EnergeticsGraph extends View {
+public class EnergeticsGraph extends View implements View.OnTouchListener {
 
     private static final int MAIN_COLOR = Color.WHITE;
-    private Energetics reactantEnergetics;
-    private Energetics productEnergetics;
-    private Energetics combinedEnergetics;
+    private EnergeticsSet energetics;
     private double maxTemp;
     private float maxVal;
     private float minVal;
     private EnergeticsField mode = EnergeticsField.GIBBS;
 
-    private Paint reactantsPaint = new Paint();
-    private Paint productsPaint = new Paint();
+
+    //private Paint reactantsPaint = new Paint();
+    //private Paint productsPaint = new Paint();
     private Paint combinedPaint = new Paint();
+    private Paint fillPaint = new Paint();
     private Paint axisPaint = new Paint();
     private Paint textPaint = new Paint();
+    private Paint cursorPaint = new Paint();
+    private DecimalFormat labelFormat = new DecimalFormat("#.00");
     private int axisPadding;
 
     private double conversionRatioX;
     private double conversionRatioY;
     private float graphStart;
+    private int contentWidth;
+
+    private float cursorX;
 
 
     public EnergeticsGraph(Context context) {
@@ -59,15 +69,13 @@ public class EnergeticsGraph extends View {
         init(attrs, defStyle);
     }
     
-    public void setEnergetics( Energetics reactantEnergetics, Energetics productEnergetics, Energetics combinedEnergetics ){
-        this.reactantEnergetics = reactantEnergetics;
-        this.productEnergetics = productEnergetics;
-        this.combinedEnergetics = combinedEnergetics;
+    public void setEnergetics( EnergeticsSet energetics ){
+        this.energetics = energetics;
         this.maxTemp = Math.max(
-            this.reactantEnergetics.getData().lastEntry().getKey(),
+            this.energetics.getReactantEnergetics().getData().lastEntry().getKey(),
             Math.max(
-                this.productEnergetics.getData().lastEntry().getKey(),
-                this.combinedEnergetics.getData().lastEntry().getKey()
+                this.energetics.getProductEnergetics().getData().lastEntry().getKey(),
+                this.energetics.getCombinedEnergetics().getData().lastEntry().getKey()
             )
         );
         this.calculateMaxVal();
@@ -82,7 +90,7 @@ public class EnergeticsGraph extends View {
         textPaint.setTypeface(TypefaceCache.KIRO.get(this.getContext()));
         textPaint.setTextSize(getResources().getDimension(R.dimen.graph_text_size));
         textPaint.setTextAlign(Paint.Align.CENTER);
-
+/*
         reactantsPaint.setColor(Color.CYAN);
         reactantsPaint.setStrokeWidth((int) getResources().getDimension(R.dimen.graph_line_stroke));
         reactantsPaint.setStrokeJoin(Paint.Join.ROUND);
@@ -92,25 +100,39 @@ public class EnergeticsGraph extends View {
         productsPaint.setStrokeWidth((int) getResources().getDimension(R.dimen.graph_line_stroke));
         productsPaint.setStrokeJoin(Paint.Join.ROUND);
         productsPaint.setPathEffect(new DashPathEffect(new float[]{10, 20}, 0));
-
-        combinedPaint.setColor(Color.YELLOW);
+*/
+        combinedPaint.setColor(this.getResources().getColor(R.color.nist_purple_light));
         combinedPaint.setStrokeWidth((int) getResources().getDimension(R.dimen.graph_line_stroke));
         combinedPaint.setStrokeJoin(Paint.Join.ROUND);
 
-        axisPaint.setColor(MAIN_COLOR);
+        fillPaint.setColor(this.getResources().getColor(R.color.nist_purple_light_transparency));
+        fillPaint.setStyle(Paint.Style.FILL);
+
+        axisPaint.setColor(this.getResources().getColor(R.color.axis_gray));
         axisPaint.setStrokeWidth((int) getResources().getDimension(R.dimen.graph_axis_stroke));
         axisPaint.setStrokeJoin(Paint.Join.ROUND);
         axisPaint.setStrokeCap(Paint.Cap.ROUND);
 
+        cursorPaint.setColor(this.getResources().getColor(R.color.axis_gray));
+        cursorPaint.setStrokeWidth((int) getResources().getDimension(R.dimen.graph_line_stroke));
+
         this.axisPadding = (int)getResources().getDimension(R.dimen.graph_axis_padding);
         this.graphStart = this.axisPadding + (int)getResources().getDimension(R.dimen.graph_axis_stroke);
+        this.cursorX = this.graphStart;
+
+        this.setOnTouchListener(this);
+    }
+
+    @Override
+    public void onScreenStateChanged(int screenState) {
+        super.onScreenStateChanged(screenState);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if( this.reactantEnergetics == null) {
+        if( this.energetics == null) {
             canvas.drawText("Loading...", 15, 15, this.textPaint);
             return;
         }
@@ -121,7 +143,7 @@ public class EnergeticsGraph extends View {
         int paddingTop = getPaddingTop();
         int paddingRight = getPaddingRight();
         int paddingBottom = getPaddingBottom();
-        int contentWidth = getWidth() - paddingLeft - paddingRight;
+        this.contentWidth = getWidth() - paddingLeft - paddingRight;
         int contentHeight = getHeight() - paddingTop - paddingBottom;
 
         int maxY = contentHeight - this.axisPadding;
@@ -136,47 +158,74 @@ public class EnergeticsGraph extends View {
         // X Axis
         canvas.drawLine(this.axisPadding, xAxisY, contentWidth, xAxisY, this.axisPaint);
 
+        //this.graphLine(this.energetics.getReactantEnergetics(), xAxisY, this.reactantsPaint, false, canvas);
+        //this.graphLine(this.energetics.getProductEnergetics(),  xAxisY, this.productsPaint,  false, canvas);
+        this.graphLine(this.energetics.getCombinedEnergetics(), xAxisY, this.combinedPaint, canvas);
 
-        this.graphLine(this.reactantEnergetics, xAxisY, this.reactantsPaint, false, canvas);
-        this.graphLine(this.productEnergetics,  xAxisY, this.productsPaint,  false, canvas);
-        this.graphLine(this.combinedEnergetics, xAxisY, this.combinedPaint,  true,  canvas);
+        // cursor
+        Double cursorTemp = ((this.cursorX - graphStart) / conversionRatioX);
+        Double yValue = this.energetics.getCombinedEnergetics().extrapolateValue(cursorTemp, this.mode);
+        if( yValue != null ) {
+            float cursorY = -(float) (yValue * conversionRatioY) + xAxisY;
 
-    }
+            canvas.drawLine(this.cursorX, 0, this.cursorX, maxY, this.cursorPaint);
+            canvas.drawLine(this.graphStart, cursorY, this.contentWidth, cursorY, this.cursorPaint);
 
-
-
-    private void graphLine( Energetics energetics, float xAxisY, Paint paint, boolean yLabel, Canvas canvas ){
-        Float lastX = null, lastY = null;
-        Float firstY = null;
-        for( Map.Entry<Double, EnergeticsEntry> entry : energetics.getData().entrySet() ){
-            Double val = entry.getValue().get(this.mode);
-            if( val != null ) {
-                float x = graphStart + (float) (entry.getKey() * conversionRatioX);
-                float y = -(float) (val * conversionRatioY) + xAxisY;
-                if (lastX != null) {
-                    canvas.drawLine(lastX, lastY, x, y, paint);
-                }
-                if( firstY == null ){
-                    firstY = y;
-                }
-                lastX = x;
-                lastY = y;
+            String tempStr = labelFormat.format(cursorTemp) + " K";
+            if (yValue >= 0) {
+                canvas.drawText(tempStr, this.cursorX,
+                        xAxisY - this.getResources().getDimension(R.dimen.graph_label_padding),
+                        this.textPaint);
+            } else {
+                canvas.drawText(tempStr, this.cursorX,
+                        xAxisY + this.textPaint.getTextSize() + this.getResources().getDimension(R.dimen.graph_label_padding),
+                        this.textPaint);
             }
-        }
-        if( yLabel ) {
+
             canvas.save();
             canvas.rotate(-90);
-            canvas.drawText(
-                    energetics.getData().firstEntry().getValue().get(this.mode).toString() + " " + this.mode.getUnits(),
-                    -firstY, (this.axisPadding / 2), this.textPaint);
+            String yValueStr = labelFormat.format(yValue) + " " + this.mode.getUnits();
+            canvas.drawText(yValueStr, -cursorY, (this.axisPadding / 2), this.textPaint);
             canvas.restore();
         }
     }
 
 
+
+
+    private void graphLine( Energetics energetics, float xAxisY, Paint paint, Canvas canvas ){
+        Float lastX = null, lastY = null;
+        Float firstX = null, firstY = null;
+        Path fillPath = new Path();
+
+        for( Map.Entry<Double, EnergeticsEntry> entry : energetics.getData().entrySet() ){
+            Double val = entry.getValue().get(this.mode);
+            if( val != null ) {
+                Float x = graphStart + (float) (entry.getKey() * conversionRatioX);
+                Float y = -(float) (val * conversionRatioY) + xAxisY;
+                if( firstX == null ){
+                    firstX = x;
+                    firstY = y;
+                    fillPath.moveTo(firstX, firstY);
+                } else if (lastX != null) {
+                    canvas.drawLine(lastX, lastY, x, y, paint);
+                    fillPath.lineTo(x, y);
+                }
+                lastX = x;
+                lastY = y;
+            }
+        }
+        fillPath.lineTo(lastX, xAxisY);
+        fillPath.lineTo(firstX, xAxisY);
+        fillPath.close();
+        canvas.drawPath(fillPath, this.fillPaint);
+    }
+
+
     private void calculateMaxVal(){
         double maxVal = 0, minVal = 0;
-        for( EnergeticsEntry ee : this.reactantEnergetics.getData().values() ){
+        /*
+        for( EnergeticsEntry ee : this.energetics.getReactantEnergetics().getData().values() ){
             Double val = ee.get(this.mode);
             if( val == null ){
                 continue;
@@ -186,7 +235,7 @@ public class EnergeticsGraph extends View {
                 minVal = val;
             }
         }
-        for( EnergeticsEntry ee : this.productEnergetics.getData().values() ){
+        for( EnergeticsEntry ee : this.energetics.getProductEnergetics().getData().values() ){
             Double val = ee.get(this.mode);
             if( val == null ){
                 continue;
@@ -196,7 +245,8 @@ public class EnergeticsGraph extends View {
                 minVal = val;
             }
         }
-        for( EnergeticsEntry ee : this.combinedEnergetics.getData().values() ){
+        */
+        for( EnergeticsEntry ee : this.energetics.getCombinedEnergetics().getData().values() ){
             Double val = ee.get(this.mode);
             if( val == null ){
                 continue;
@@ -210,9 +260,30 @@ public class EnergeticsGraph extends View {
         this.minVal = (float)minVal;
     }
 
+
     public void setMode(EnergeticsField mode) {
         this.mode = mode;
         this.calculateMaxVal();
+        this.postInvalidate();
     }
 
+
+
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        switch(event.getActionMasked()){
+            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_MOVE:
+                this.cursorX = event.getX();
+                if( this.cursorX < this.graphStart ){
+                    this.cursorX = this.graphStart;
+                } else if( this.cursorX > this.contentWidth ){
+                    this.cursorX = this.contentWidth;
+                }
+                this.postInvalidate();
+                return true;
+        }
+        return false;
+    }
 }

@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <item name="nist_purple_light"  type="color">#4b3cff</item>
+    <item name="nist_purple_light_transparency" type="color">#334b3cff</item>
     <item name="nist_purple"        type="color">#362bb7</item>
-    <item name="nist_purple_dark"   type="color">#1e159b</item>
+    <item name="nist_purple_dark"   type="color">#26137f</item>
     <item name="dark_gray"          type="color">#333333</item>
     <item name="sub_gray"           type="color">#555555</item>
+    <item name="axis_gray"          type="color">#AAAAAA</item>
 </resources>

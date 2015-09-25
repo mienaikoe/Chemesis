@@ -16,4 +16,14 @@
 
     <string name="nist_disclaimer">This product uses data provided by the National Institute of Standards and Technology (NIST) but is not endorsed or certified by NIST.</string>
     <string name="srd_energetics">101</string>
+
+    <string-array name="planets_array">
+        <item>Mer</item>
+        <item>Venus</item>
+        <item>Earth</item>
+        <item>Mars</item>
+    </string-array>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

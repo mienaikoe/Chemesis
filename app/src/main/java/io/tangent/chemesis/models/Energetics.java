@@ -33,17 +33,17 @@ public class Energetics implements Parcelable{
                 JSONObject values = tempPoint.getJSONObject("values");
 
                 Double gibbs = null, enthalpy = null, entropy = null;
-                String gibbsStr = values.optString("delta-f G°");
+                String gibbsStr = values.optString(EnergeticsField.GIBBS.getFieldname());
                 if( !gibbsStr.isEmpty() ){
                     gibbs = Double.valueOf(gibbsStr);
                 }
 
-                String enthStr = values.optString("delta-f H°");
+                String enthStr = values.optString(EnergeticsField.ENTHALPY.getFieldname());
                 if( !enthStr.isEmpty() ){
                     enthalpy = Double.valueOf(enthStr);
                 }
 
-                String entrStr = values.optString("S°");
+                String entrStr = values.optString(EnergeticsField.ENTROPY.getFieldname());
                 if( !entrStr.isEmpty() ){
                     entropy = Double.valueOf(entrStr);
                 }
@@ -99,7 +99,24 @@ public class Energetics implements Parcelable{
         return data;
     }
 
+    public Double extrapolateValue(Double cursorTemp, EnergeticsField mode) {
+        Map.Entry<Double, EnergeticsEntry> floor = this.getData().floorEntry(cursorTemp);
+        Map.Entry<Double, EnergeticsEntry> ceiling = this.getData().ceilingEntry(cursorTemp);
 
+        if( floor == null ) {
+            return ceiling.getValue().get(mode);
+        } else if( floor.getKey().equals(cursorTemp) ){
+            return floor.getValue().get(mode);
+        } else if( ceiling == null ){
+            return floor.getValue().get(mode);
+        } else if ( ceiling.getKey().equals(cursorTemp) ) {
+            return ceiling.getValue().get(mode);
+        }
+
+        double weight = ((cursorTemp - floor.getKey()) / (ceiling.getKey() - floor.getKey()));
+        EnergeticsEntry entry = EnergeticsEntry.extrapolate(floor.getValue(), ceiling.getValue(), weight);
+        return entry.get(mode);
+    }
 
     
     
@@ -144,5 +161,7 @@ public class Energetics implements Parcelable{
         }
         return sb.toString();
     }
+
+
 }
 

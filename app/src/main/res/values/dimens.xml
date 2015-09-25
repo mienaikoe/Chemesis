@@ -7,4 +7,5 @@
     <dimen name="graph_axis_padding">20dp</dimen>
     <dimen name="graph_axis_stroke">2dp</dimen>
     <dimen name="graph_line_stroke">1dp</dimen>
+    <dimen name="graph_label_padding">4dp</dimen>
 </resources>
