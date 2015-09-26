@@ -36,8 +36,6 @@ public class EnergeticsGraph extends View implements View.OnTouchListener {
     private EnergeticsField mode = EnergeticsField.GIBBS;
 
 
-    //private Paint reactantsPaint = new Paint();
-    //private Paint productsPaint = new Paint();
     private Paint combinedPaint = new Paint();
     private Paint fillPaint = new Paint();
     private Paint axisPaint = new Paint();
@@ -82,6 +80,7 @@ public class EnergeticsGraph extends View implements View.OnTouchListener {
         this.invalidate();
     }
 
+
     private void init(AttributeSet attrs, int defStyle) {
         // Load attributes
         // Set up a default TextPaint object
@@ -90,30 +89,20 @@ public class EnergeticsGraph extends View implements View.OnTouchListener {
         textPaint.setTypeface(TypefaceCache.KIRO.get(this.getContext()));
         textPaint.setTextSize(getResources().getDimension(R.dimen.graph_text_size));
         textPaint.setTextAlign(Paint.Align.CENTER);
-/*
-        reactantsPaint.setColor(Color.CYAN);
-        reactantsPaint.setStrokeWidth((int) getResources().getDimension(R.dimen.graph_line_stroke));
-        reactantsPaint.setStrokeJoin(Paint.Join.ROUND);
-        reactantsPaint.setPathEffect(new DashPathEffect(new float[]{10, 20}, 0));
 
-        productsPaint.setColor(Color.MAGENTA);
-        productsPaint.setStrokeWidth((int) getResources().getDimension(R.dimen.graph_line_stroke));
-        productsPaint.setStrokeJoin(Paint.Join.ROUND);
-        productsPaint.setPathEffect(new DashPathEffect(new float[]{10, 20}, 0));
-*/
-        combinedPaint.setColor(this.getResources().getColor(R.color.nist_purple_light));
+        combinedPaint.setColor(this.getResources().getColor(R.color.graph_line));
         combinedPaint.setStrokeWidth((int) getResources().getDimension(R.dimen.graph_line_stroke));
         combinedPaint.setStrokeJoin(Paint.Join.ROUND);
 
-        fillPaint.setColor(this.getResources().getColor(R.color.nist_purple_light_transparency));
+        fillPaint.setColor(this.getResources().getColor(R.color.graph_fill));
         fillPaint.setStyle(Paint.Style.FILL);
 
-        axisPaint.setColor(this.getResources().getColor(R.color.axis_gray));
+        axisPaint.setColor(Color.WHITE);
         axisPaint.setStrokeWidth((int) getResources().getDimension(R.dimen.graph_axis_stroke));
         axisPaint.setStrokeJoin(Paint.Join.ROUND);
         axisPaint.setStrokeCap(Paint.Cap.ROUND);
 
-        cursorPaint.setColor(this.getResources().getColor(R.color.axis_gray));
+        cursorPaint.setColor(this.getResources().getColor(R.color.cursor_gray));
         cursorPaint.setStrokeWidth((int) getResources().getDimension(R.dimen.graph_line_stroke));
 
         this.axisPadding = (int)getResources().getDimension(R.dimen.graph_axis_padding);
@@ -149,45 +138,20 @@ public class EnergeticsGraph extends View implements View.OnTouchListener {
         int maxY = contentHeight - this.axisPadding;
 
         this.conversionRatioX = (contentWidth - graphStart) / ( maxTemp );
-        float graphSpaceY = contentHeight - graphStart;
+        float graphSpaceY = maxY - graphStart;
         this.conversionRatioY = (graphSpaceY) / ( maxVal - minVal );
-        float xAxisY = graphSpaceY - (float)((0 - minVal) * conversionRatioY);
+        float xAxisY = graphSpaceY - (float)((0 - minVal) * conversionRatioY) + this.axisPadding;
 
-        // Y Axis
-        canvas.drawLine(this.axisPadding, 0, this.axisPadding, maxY, this.axisPaint);
-        // X Axis
-        canvas.drawLine(this.axisPadding, xAxisY, contentWidth, xAxisY, this.axisPaint);
-
-        //this.graphLine(this.energetics.getReactantEnergetics(), xAxisY, this.reactantsPaint, false, canvas);
-        //this.graphLine(this.energetics.getProductEnergetics(),  xAxisY, this.productsPaint,  false, canvas);
+        // Data
         this.graphLine(this.energetics.getCombinedEnergetics(), xAxisY, this.combinedPaint, canvas);
 
-        // cursor
-        Double cursorTemp = ((this.cursorX - graphStart) / conversionRatioX);
-        Double yValue = this.energetics.getCombinedEnergetics().extrapolateValue(cursorTemp, this.mode);
-        if( yValue != null ) {
-            float cursorY = -(float) (yValue * conversionRatioY) + xAxisY;
+        // Axes
+        canvas.drawLine(this.axisPadding, this.axisPadding, this.axisPadding, maxY, this.axisPaint);
+        canvas.drawLine(this.axisPadding, xAxisY, contentWidth, xAxisY, this.axisPaint);
 
-            canvas.drawLine(this.cursorX, 0, this.cursorX, maxY, this.cursorPaint);
-            canvas.drawLine(this.graphStart, cursorY, this.contentWidth, cursorY, this.cursorPaint);
+        // Cursor
+        this.graphCursor(canvas, xAxisY, maxY);
 
-            String tempStr = labelFormat.format(cursorTemp) + " K";
-            if (yValue >= 0) {
-                canvas.drawText(tempStr, this.cursorX,
-                        xAxisY - this.getResources().getDimension(R.dimen.graph_label_padding),
-                        this.textPaint);
-            } else {
-                canvas.drawText(tempStr, this.cursorX,
-                        xAxisY + this.textPaint.getTextSize() + this.getResources().getDimension(R.dimen.graph_label_padding),
-                        this.textPaint);
-            }
-
-            canvas.save();
-            canvas.rotate(-90);
-            String yValueStr = labelFormat.format(yValue) + " " + this.mode.getUnits();
-            canvas.drawText(yValueStr, -cursorY, (this.axisPadding / 2), this.textPaint);
-            canvas.restore();
-        }
     }
 
 
@@ -221,31 +185,46 @@ public class EnergeticsGraph extends View implements View.OnTouchListener {
         canvas.drawPath(fillPath, this.fillPaint);
     }
 
+    private void graphCursor(Canvas canvas, float xAxisY, float maxY){
+        Double cursorTemp;
+        if( this.cursorX <= this.graphStart) {
+            cursorTemp = this.energetics.getCombinedEnergetics().getFirstDataKey(this.mode);
+            this.cursorX = (float)(cursorTemp * conversionRatioX) + graphStart;
+        } else {
+            cursorTemp = ((this.cursorX - graphStart) / conversionRatioX);
+        }
+
+        Double yValue = this.energetics.getCombinedEnergetics().extrapolateValue(cursorTemp, this.mode);
+        if( yValue != null ) {
+            float cursorY = -(float) (yValue * conversionRatioY) + xAxisY;
+
+            canvas.drawLine(this.cursorX, this.graphStart, this.cursorX, maxY, this.cursorPaint);
+            canvas.drawLine(this.graphStart, cursorY, this.contentWidth, cursorY, this.cursorPaint);
+
+            String tempStr = labelFormat.format(cursorTemp) + " K";
+            if (yValue <= 0) {
+                canvas.drawText(tempStr, this.cursorX,
+                        xAxisY - this.getResources().getDimension(R.dimen.graph_label_padding),
+                        this.textPaint);
+            } else {
+                canvas.drawText(tempStr, this.cursorX,
+                        xAxisY + this.textPaint.getTextSize() + this.getResources().getDimension(R.dimen.graph_label_padding),
+                        this.textPaint);
+            }
+
+            canvas.save();
+            canvas.rotate(-90);
+            String yValueStr = labelFormat.format(yValue) + " " + this.mode.getUnits();
+            canvas.drawText(yValueStr, -cursorY, (this.axisPadding / 2), this.textPaint);
+            canvas.restore();
+        }
+    }
+
+
+
 
     private void calculateMaxVal(){
         double maxVal = 0, minVal = 0;
-        /*
-        for( EnergeticsEntry ee : this.energetics.getReactantEnergetics().getData().values() ){
-            Double val = ee.get(this.mode);
-            if( val == null ){
-                continue;
-            } else if( val > maxVal ){
-                maxVal = val;
-            } else if( val < minVal ){
-                minVal = val;
-            }
-        }
-        for( EnergeticsEntry ee : this.energetics.getProductEnergetics().getData().values() ){
-            Double val = ee.get(this.mode);
-            if( val == null ){
-                continue;
-            } else if( val > maxVal ){
-                maxVal = val;
-            } else if( val < minVal ){
-                minVal = val;
-            }
-        }
-        */
         for( EnergeticsEntry ee : this.energetics.getCombinedEnergetics().getData().values() ){
             Double val = ee.get(this.mode);
             if( val == null ){

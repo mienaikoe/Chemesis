@@ -163,5 +163,13 @@ public class Energetics implements Parcelable{
     }
 
 
+    public Double getFirstDataKey(EnergeticsField mode) {
+        for( Map.Entry<Double, EnergeticsEntry> entry : this.data.entrySet() ){
+            if( entry.getValue().get(mode) != null ){
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
 }
 

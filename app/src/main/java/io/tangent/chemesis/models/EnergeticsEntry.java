@@ -94,9 +94,9 @@ public class EnergeticsEntry implements Parcelable {
 
     public static EnergeticsEntry extrapolate(EnergeticsEntry pre, EnergeticsEntry post, double weight) {
         return new EnergeticsEntry(
-                (pre.gibbs != null && post.gibbs != null) ? ((pre.gibbs * weight) + (post.gibbs * (1-weight))) : null,
-                (pre.enthalpy != null && post.enthalpy != null) ? ((pre.enthalpy * weight) + (post.enthalpy * (1-weight))) : null,
-                (pre.entropy != null && post.entropy != null) ? ((pre.entropy * weight)  + (post.entropy * (1-weight))) : null
+                (pre.gibbs != null && post.gibbs != null) ? ((pre.gibbs * (1-weight)) + (post.gibbs * (weight))) : null,
+                (pre.enthalpy != null && post.enthalpy != null) ? ((pre.enthalpy * (1-weight)) + (post.enthalpy * (weight))) : null,
+                (pre.entropy != null && post.entropy != null) ? ((pre.entropy * (1-weight))  + (post.entropy * (weight))) : null
         );
     }
 
