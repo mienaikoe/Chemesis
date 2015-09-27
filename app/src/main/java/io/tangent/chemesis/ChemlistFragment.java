@@ -92,8 +92,6 @@ public class ChemlistFragment extends Fragment implements View.OnClickListener {
         ImageButton addButton = (ImageButton)ret.findViewById(R.id.add_chemical);
         addButton.setOnClickListener(this);
 
-
-
         return ret;
     }
 

@@ -4,16 +4,17 @@
 
     <item
         android:id="@+id/action_balance"
-        android:icon="@mipmap/ic_react"
+        android:icon="@mipmap/ic_balance"
         android:title="@string/action_react"
         android:orderInCategory="2"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/action_energetics"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_graph"
         android:title="@string/action_energetics"
         android:orderInCategory="1"
         android:enabled="false"
         app:showAsAction="always" />
+
 </menu>

@@ -108,10 +108,17 @@ public class MainActivity extends ActionBarActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu){
-        this.energeticsButton.setEnabled(this.reaction.isBalanced());
-        this.energeticsButton.setVisible(this.reaction.isBalanced());
-        this.balanceButton.setEnabled(!this.reaction.isBalanced());
-        this.balanceButton.setVisible( !this.reaction.isBalanced() );
+        if( this.reaction.isBalanced() ){
+            this.energeticsButton.setEnabled(true);
+            this.energeticsButton.setIcon(getResources().getDrawable(R.mipmap.ic_graph));
+            this.balanceButton.setEnabled(false);
+            this.balanceButton.setIcon(getResources().getDrawable(R.mipmap.ic_balance_disabled));
+        } else {
+            this.energeticsButton.setEnabled(false);
+            this.energeticsButton.setIcon(getResources().getDrawable(R.mipmap.ic_graph_disabled));
+            this.balanceButton.setEnabled(true);
+            this.balanceButton.setIcon(getResources().getDrawable(R.mipmap.ic_balance));
+        }
         return super.onPrepareOptionsMenu(menu);
     }
 

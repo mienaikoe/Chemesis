@@ -1,7 +1,9 @@
 package io.tangent.chemesis.models;
 
 import android.util.Log;
+import android.util.Rational;
 
+import org.apache.commons.math3.fraction.Fraction;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
@@ -116,19 +118,22 @@ public class ReactionBalancer {
         equation.)*/
         // Not Needed because Vector is implemented in both ways
 
-
         /*(g) Make the smallest number in each transposed vector equal
         to 1 by dividing each vector element by the element of the
         smallest magnitude. (These scaled vectors are the
         coefficients that balance the equation, term by term, left to
         right.)*/
-        double minValue = 1;
+        int gcd = 1;
         for( double val : nullSpaceVector.toArray() ){
-            if( Math.abs(val) < minValue && val != 0 ){
-                minValue = Math.abs(val);
+            Fraction f = new Fraction(val);
+            if( f.getDenominator() > gcd ){
+                gcd = f.getDenominator();
             }
+            /*if( Math.abs(val) < minValue && val != 0 ){
+                minValue = Math.abs(val);
+            }*/
         }
-        nullSpaceVector.mapDivideToSelf(minValue);
+        nullSpaceVector.mapMultiplyToSelf(gcd);
         Log.i("(g)", nullSpaceVector.toString());
 
         /*(h) Construct a new chemical-reaction equation by placing
