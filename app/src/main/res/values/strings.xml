@@ -15,7 +15,7 @@
     <string name="action_settings">Settings</string>
 
     <string name="nist_disclaimer">This product uses data provided by the National Institute of Standards and Technology (NIST) but is not endorsed or certified by NIST.</string>
-    <string name="srd_energetics">101</string>
+    <string name="nist_srd">(NIST SRD 101)</string>
 
     <string-array name="planets_array">
         <item>Mer</item>
@@ -24,6 +24,7 @@
         <item>Mars</item>
     </string-array>
 
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="guidance_add">Use the \"+\" button to add chemicals.</string>
+    <string name="guidance_balance">Use the balance option to balance the equation.</string>
+    <string name="guidance_graph">Use the graph option to see the energy dynamics of the reaction.</string>
 </resources>

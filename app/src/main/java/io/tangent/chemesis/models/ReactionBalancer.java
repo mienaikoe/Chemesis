@@ -154,8 +154,15 @@ public class ReactionBalancer {
 
 
 
-
     private RealMatrix matrixA(Reaction reaction) throws IllegalStateException{
+
+        if( reaction.getReactants().size() == 0 ){
+            throw new IllegalStateException("Equation must have reactants");
+        }
+        if( reaction.getProducts().size() == 0 ){
+            throw new IllegalStateException("Equation must have products");
+        }
+
         // compile a list of all involved elements
         int n = 0;
         Set<Element> reactantElements = new HashSet<Element>();

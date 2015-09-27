@@ -99,7 +99,6 @@ public class Reaction implements Parcelable{
 
 
 
-
     public void balance() throws IllegalStateException{
         ReactionBalancer balancer = new ReactionBalancer();
         balancer.balanceThorne(this);

@@ -1,5 +1,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:chemesis="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
     android:layout_height="match_parent" tools:context="io.tangent.chemesis.ChemlistFragment"
     android:background="#FFFFFF">
 
@@ -11,6 +13,54 @@
         android:id="@+id/chemlist"
         android:background="#ffffff">
     </ListView>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:id="@+id/guidance"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:paddingTop="120dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:background="@color/guidance_background">
+        <io.tangent.chemesis.views.TextViewPlus
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
+            android:textColor="@color/cursor_gray"
+            android:text="@string/guidance_add"
+            android:textSize="18dp"
+            android:textAlignment="center"
+            android:gravity="center"
+            chemesis:typeface="KIRO"
+            />
+        <io.tangent.chemesis.views.TextViewPlus
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
+            android:textColor="@color/cursor_gray"
+            android:text="@string/guidance_balance"
+            android:textSize="18dp"
+            android:textAlignment="center"
+            android:gravity="center"
+            chemesis:typeface="KIRO"
+            />
+        <io.tangent.chemesis.views.TextViewPlus
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
+            android:textColor="@color/cursor_gray"
+            android:text="@string/guidance_graph"
+            android:textSize="18dp"
+            android:textAlignment="center"
+            android:gravity="center"
+            chemesis:typeface="KIRO"
+            />
+    </LinearLayout>
+
 
     <ImageButton
         android:id="@+id/add_chemical"

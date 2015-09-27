@@ -65,11 +65,6 @@ public class MainActivity extends ActionBarActivity {
         } else {
             // create fake reaction
             this.reaction = new Reaction();
-            // TODO: Debugging Code. Remove and replace with empty state!!
-            this.reaction.addReactant(Chemical.Fe2O3_cr);
-            this.reaction.addReactant(Chemical.Al_cr);
-            this.reaction.addProduct(Chemical.Al2O3_a_cr);
-            this.reaction.addProduct(Chemical.Fe_l);
         }
 
         this.reaction.setOnInvalidate(new Callback<Object>() {

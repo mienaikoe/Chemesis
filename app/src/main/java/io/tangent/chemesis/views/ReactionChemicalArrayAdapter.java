@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import io.tangent.chemesis.ChemlistFragment;
 import io.tangent.chemesis.R;
 import io.tangent.chemesis.models.Chemical;
 import io.tangent.chemesis.models.EnergeticsField;
@@ -26,6 +27,7 @@ public class ReactionChemicalArrayAdapter extends ArrayAdapter<ReactionChemical>
     private List<ReactionChemical> chemicals;
     private Reaction reaction;
     private LayoutInflater mInflater;
+    private ChemlistFragment parent;
 
 
     public ReactionChemicalArrayAdapter(Context context, List<ReactionChemical> chemicals, Reaction reaction) {
@@ -68,6 +70,10 @@ public class ReactionChemicalArrayAdapter extends ArrayAdapter<ReactionChemical>
     }
 
 
+    public void setParent(ChemlistFragment fragment){
+        this.parent = fragment;
+    }
+
 
 
     class ReactionChemicalRemoverClickListener implements View.OnClickListener {
@@ -81,7 +87,11 @@ public class ReactionChemicalArrayAdapter extends ArrayAdapter<ReactionChemical>
         @Override
         public void onClick(View v) {
             reaction.remove(this.reactionChemical);
-            notifyDataSetChanged();
+            if( parent != null ) {
+                parent.notifyDataSetChanged();
+            } else {
+                notifyDataSetChanged();
+            }
             this.reactionChemical = null; // for gc
         }
     }

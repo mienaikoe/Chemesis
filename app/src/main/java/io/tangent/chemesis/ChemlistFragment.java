@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import java.util.List;
@@ -30,6 +31,7 @@ public class ChemlistFragment extends Fragment implements View.OnClickListener {
 
     private ReactionChemicalArrayAdapter mAdapter;
     private Activity parentActivity;
+    private LinearLayout guidanceLayout;
 
     /**
      * Use this factory method to create a new instance of
@@ -60,6 +62,7 @@ public class ChemlistFragment extends Fragment implements View.OnClickListener {
             this.mAdapter = new ReactionChemicalArrayAdapter(
                     this.getActivity(), (isProduct ? this.reaction.getProducts() : this.reaction.getReactants()), this.reaction
             );
+            this.mAdapter.setParent(this);
         }
     }
 
@@ -76,6 +79,7 @@ public class ChemlistFragment extends Fragment implements View.OnClickListener {
                     savedInstanceState.getInt("addRequestId")
             );
         }
+
     }
 
 
@@ -88,6 +92,9 @@ public class ChemlistFragment extends Fragment implements View.OnClickListener {
 
         this.initAdapter();
         list.setAdapter(this.mAdapter);
+
+        this.guidanceLayout = (LinearLayout)ret.findViewById(R.id.guidance);
+        this.setGuidance();
 
         ImageButton addButton = (ImageButton)ret.findViewById(R.id.add_chemical);
         addButton.setOnClickListener(this);
@@ -123,6 +130,15 @@ public class ChemlistFragment extends Fragment implements View.OnClickListener {
 
     public void notifyDataSetChanged(){
         this.mAdapter.notifyDataSetChanged();
+        this.setGuidance();
+    }
+
+    private void setGuidance(){
+        if( this.mAdapter.getCount() > 0 ){
+            this.guidanceLayout.setVisibility(View.GONE);
+        } else {
+            this.guidanceLayout.setVisibility(View.VISIBLE);
+        }
     }
 
 
